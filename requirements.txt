@@ -1,0 +1,13 @@
+# requirements.txt
+# Core Web Framework
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+python-multipart  # Required for file uploads
+
+# AI & Multimodal
+google-genai>=0.3.0  # The 2026 Google AI SDK
+pillow>=10.2.0       # For image preprocessing/resizing
+python-dotenv>=1.0.0 # To load your API keys
+
+# Security & Utilities
+pydantic-settings>=2.1.0 # Modern environment management

@@ -1,0 +1,31 @@
+# .dockerignore
+# Ignore python vitual environments
+venv/
+.venv/
+env/
+
+# Ignore python cache
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignore environment secrets
+.env
+.env.local
+
+# Ignore Git
+.git
+.gitignore
+
+# Ignore IDE settings
+.vscode/
+.idea/
+
+# Ignore Docker files (they aren't needed inside the image)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Ignore logs and temp files
+*.log
+tmp/
