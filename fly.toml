@@ -1,0 +1,16 @@
+app: socratic-parent
+region: us-west
+services:
+  - name: web
+    image: 
+      build:
+        dockerfile: Dockerfile
+    port: 8000
+    health_check:
+      http:
+        path: /health
+    env:
+      - key: GEMINI_API_KEY
+        value: ${GEMINI_API_KEY}
+    scale:
+      memory: 512MB

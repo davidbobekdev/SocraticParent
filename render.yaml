@@ -1,0 +1,18 @@
+# Render.com Blueprint
+# This file defines the infrastructure for deploying Socratic Parent on Render
+
+services:
+  # Web Service
+  - type: web
+    name: socratic-parent
+    env: docker
+    plan: free
+    region: oregon
+    branch: main
+    healthCheckPath: /health
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: PORT
+        value: 8000
+    autoDeploy: true

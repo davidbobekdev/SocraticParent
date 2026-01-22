@@ -8,6 +8,18 @@ Transform homework battles into meaningful learning moments using AI-powered Soc
 ![Python](https://img.shields.io/badge/python-3.12-blue.svg)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.104-green.svg)
 
+## 🌐 Try It Now!
+
+**[Use Socratic Parent Online →](https://yourusername.github.io/SocraticParent/)**
+
+No installation required! Just:
+1. Visit the link above
+2. Get a free [Google Gemini API key](https://makersuite.google.com/app/apikey)
+3. Upload your child's homework
+4. Get instant Socratic coaching guidance
+
+> Your API key is stored locally in your browser and never sent anywhere except Google's API.
+
 ## 🌟 Philosophy
 
 In an age where AI can instantly solve any homework problem, we take a different approach:
@@ -26,12 +38,20 @@ In an age where AI can instantly solve any homework problem, we take a different
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### Option 1: Use Online (Easiest!)
+
+Visit **[https://yourusername.github.io/SocraticParent/](https://yourusername.github.io/SocraticParent/)**
+
+No installation needed! Just get a free [Gemini API key](https://makersuite.google.com/app/apikey) and start using it immediately.
+
+### Option 2: Self-Host with Docker
+
+#### Prerequisites
 
 - Docker and Docker Compose
 - Google Gemini API key ([Get one here](https://makersuite.google.com/app/apikey))
 
-### Installation
+#### Installation
 
 1. **Clone the repository**
 ```bash
