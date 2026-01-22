@@ -48,11 +48,21 @@ deploy_github_pages() {
         git remote add origin "$repo_url"
     fi
     
+    # Get current branch name
+    current_branch=$(git rev-parse --abbrev-ref HEAD)
+    
     # Push to GitHub
     echo -e "${YELLOW}Pushing to GitHub...${NC}"
     git add .
     git commit -m "Deploy GitHub Pages" || true
-    git push -u origin main || git push -u origin master
+    
+    # Handle branch divergence by doing a pull first
+    echo -e "${YELLOW}Syncing with remote...${NC}"
+    git fetch origin
+    git merge --allow-unrelated-histories -X theirs origin/$current_branch || true
+    
+    # Now push
+    git push -u origin $current_branch
     
     echo -e "\n${GREEN}✓ GitHub Pages deployment initiated!${NC}"
     echo -e "\n${CYAN}Next steps:${NC}"
