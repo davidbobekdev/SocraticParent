@@ -19,20 +19,15 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 5. Application Layer
-# Copy static files (HTML/JS) and the backend code
-COPY ./static ./static
+# Copy the backend code (HTML is embedded)
 COPY ./main.py .
 
 # 6. Permissions: Give the non-root user ownership
 RUN chown -R socratic:socratic $APP_HOME
 
-# 7. Health Check: Ensures the app is responding
-HEALTHCHECK --interval=30s --timeout=3s \
-  CMD curl -f http://localhost:8000/health || exit 1
-
-# 8. Switch to Secure User
+# 7. Switch to Secure User
 USER socratic
 
 # Launch application
 EXPOSE 8000
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]

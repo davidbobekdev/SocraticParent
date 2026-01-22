@@ -1,473 +1,423 @@
 """
-Socratic Parent Backend - FastAPI Application
-The "Anti-Homework-Solver" for the 2026 AI-Saturated Era
+Socratic Parent - Simple Version with Image Upload and API Key Session
 """
 
 import os
-import base64
-import uuid
-import time
-import json
-from io import BytesIO
-from typing import Optional
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Cookie
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
-from pydantic import BaseModel
-from PIL import Image
 from google import genai
 from google.genai import types
+from fastapi import FastAPI, File, UploadFile, Form
+from fastapi.responses import HTMLResponse, JSONResponse
 from dotenv import load_dotenv
 
-# Optional OAuth imports
-try:
-    from google.oauth2 import id_token
-    from google.auth.transport import requests as google_requests
-    OAUTH_AVAILABLE = True
-except ImportError:
-    OAUTH_AVAILABLE = False
-    print("⚠️  OAuth packages not available, OAuth disabled")
-
-# Load environment variables
 load_dotenv()
 
-# OAuth Configuration
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
-FRONTEND_URL = os.getenv("FRONTEND_URL", "https://davidbobekdev.github.io/SocraticParent")
+app = FastAPI()
 
-# Fallback API key pool (if OAuth not configured)
-api_keys_str = os.getenv("API_KEYS") or os.getenv("GEMINI_API_KEY", "")
-api_keys_list = [key.strip() for key in api_keys_str.split(",") if key.strip()]
-current_key_index = 0
-
-if not api_keys_list and not GOOGLE_CLIENT_ID:
-    print("⚠️  WARNING: No authentication configured. Set GOOGLE_CLIENT_ID for OAuth or GEMINI_API_KEY for key pool.")
-
-# Session Management
-sessions = {}  # {session_id: {"created": timestamp, "user_id": str, "oauth_token": str, "key": str}}
-SESSION_TIMEOUT = 24 * 60 * 60  # 24 hours
-
-def create_session(user_id: str = None, oauth_token: str = None):
-    """Create a new session with OAuth token or API key"""
-    global current_key_index
-    session_id = str(uuid.uuid4())
-    
-    # If OAuth token provided, use it
-    if oauth_token:
-        sessions[session_id] = {
-            "created": time.time(),
-            "user_id": user_id,
-            "oauth_token": oauth_token,
-            "key": None  # Will use oauth_token instead
+HTML_CONTENT = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socratic Parent</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
-    # Otherwise assign from key pool
-    elif api_keys_list:
-        assigned_key = api_keys_list[current_key_index % len(api_keys_list)]
-        current_key_index = (current_key_index + 1) % len(api_keys_list)
-        sessions[session_id] = {
-            "created": time.time(),
-            "user_id": user_id or "anonymous",
-            "oauth_token": None,
-            "key": assigned_key
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
-    else:
-        sessions[session_id] = {
-            "created": time.time(),
-            "user_id": user_id or "anonymous",
-            "oauth_token": None,
-            "key": None
+        h1 { color: #667eea; margin-bottom: 10px; font-size: 2.5em; }
+        .tagline { color: #666; margin-bottom: 30px; font-size: 1.1em; }
+        .status { background: #e8f5e9; border: 2px solid #4caf50; border-radius: 10px; padding: 20px; margin: 20px 0; }
+        .status.warning { background: #fff3e0; border-color: #ff9800; }
+        .status-text { color: #2e7d32; font-size: 1.2em; font-weight: 600; }
+        .status.warning .status-text { color: #e65100; }
+        .info { background: #f5f5f5; border-radius: 10px; padding: 20px; margin: 20px 0; }
+        .info p { color: #333; line-height: 1.6; margin-bottom: 10px; }
+        .btn {
+            background: #667eea; color: white; border: none; padding: 15px 30px;
+            border-radius: 10px; font-size: 1em; cursor: pointer; width: 100%;
+            margin-top: 20px; font-weight: 600; transition: all 0.3s;
         }
-    
-    return session_id
-
-def get_session_key(session_id: str) -> Optional[str]:
-    """Get API key for a session, creating one if needed"""
-    if not session_id or session_id not in sessions:
-        return None
-    
-    session = sessions[session_id]
-    # Check if session expired
-    if time.time() - session["created"] > SESSION_TIMEOUT:
-        del sessions[session_id]
-        return None
-    
-    return session["key"]
-
-def cleanup_expired_sessions():
-    """Remove expired sessions"""
-    current_time = time.time()
-    expired = [sid for sid, s in sessions.items() 
-               if current_time - s["created"] > SESSION_TIMEOUT]
-    for sid in expired:
-        del sessions[sid]
-
-# Initialize FastAPI app
-app = FastAPI(
-    title="Socratic Parent API",
-    description="Pedagogical Firewall: Turning homework into meaningful learning moments",
-    version="1.0.0"
-)
-
-# CORS Configuration
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # In production, specify your frontend domain
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Mount static files for frontend
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# Configure Google Gemini AI
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-if GEMINI_API_KEY:
-    client = genai.Client(api_key=GEMINI_API_KEY)
-else:
-    client = None
-
-# System prompt for the AI "Silent Coach"
-SYSTEM_PROMPT = """You are a master educator. You are looking at a student's homework through a parent's eyes.
-
-YOUR TWO-PART MISSION:
-PART 1 - SOCRATIC QUESTIONS (Never solve directly):
-- DO NOT give the final answer in the questions
-- Guide with questions that activate thinking
-
-PART 2 - SOLUTION STEPS (Complete calculation with actual work):
-- SOLVE the problem completely with real calculations
-- Show ALL the work with actual numbers
-- Break down into clear, numbered steps
-- Include every calculation detail (e.g., "5 + 3 = 8", "12 ÷ 4 = 3")
-- These are for "last resort" viewing only, so be thorough
-
-Provide a 'Coaching Card' for the parent in this EXACT JSON format:
-{
-  "subject": "[Subject Name like Math, Science, etc.]",
-  "questions": {
-    "foundation": "[THE SPARK: A question to activate what they already know - DO NOT reveal the answer]",
-    "bridge": "[THE CLIMB: A question that points to the specific error/roadblock - DO NOT reveal the answer]",
-    "mastery": "[THE SUMMIT: A question to verify they can do it alone next time - DO NOT reveal the answer]"
-  },
-  "behavioral_tip": "[TEACHER TIP: A 1-sentence behavioral tip for parent-child harmony]",
-  "example_approach": "[OPTIONAL: A brief explanation of the concept and approach for the parent to understand. Explain the method WITHOUT giving the final answer.]",
-  "solution_steps": [
-    "Step with actual calculation: e.g., 'First, identify the numbers: 12 and 5'",
-    "Step with actual work: e.g., 'Add the numbers: 12 + 5 = 17'",
-    "Continue with ALL steps showing complete work with real digits",
-    "Final step: e.g., 'Therefore, the answer is 17'"
-  ]
-}
-
-IMPORTANT FOR solution_steps:
-- Include ACTUAL numbers from the problem
-- Show COMPLETE calculations (e.g., "24 ÷ 6 = 4")
-- Be specific, not generic
-- Solve the problem fully in these steps
-- Use as many steps as needed for clarity (5-8 steps typical)
-
-Analyze the homework image and provide ONLY the JSON response. Be encouraging, patient, and precise."""
-
-
-class AnalysisResponse(BaseModel):
-    """Response model for homework analysis"""
-    subject: str
-    questions: dict
-    behavioral_tip: str
-    example_approach: Optional[str] = None
-    solution_steps: Optional[list] = None
-
-
-class HealthResponse(BaseModel):
-    """Health check response"""
-    status: str
-    message: str
-    ai_configured: bool
-
-
-def compress_image(image_bytes: bytes, max_size: tuple = (1024, 1024), quality: int = 85) -> bytes:
-    """
-    Compress image for faster API processing and cost optimization
-    """
-    try:
-        img = Image.open(BytesIO(image_bytes))
-        
-        # Convert RGBA to RGB if necessary
-        if img.mode == 'RGBA':
-            background = Image.new('RGB', img.size, (255, 255, 255))
-            background.paste(img, mask=img.split()[3])
-            img = background
-        
-        # Resize if larger than max_size
-        img.thumbnail(max_size, Image.Resampling.LANCZOS)
-        
-        # Save to bytes buffer
-        buffer = BytesIO()
-        img.save(buffer, format='JPEG', quality=quality, optimize=True)
-        return buffer.getvalue()
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Image processing error: {str(e)}")
-
-
-async def analyze_with_ai(image_bytes: bytes, grade: Optional[str] = None, api_key: Optional[str] = None) -> dict:
-    """
-    Analyze homework image using Google Gemini AI
-    """
-    # Use provided API key or fallback to default
-    if not api_key:
-        api_key = os.getenv("GEMINI_API_KEY")
-    
-    if not api_key:
-        # Fallback response when API key is not configured
-        return {
-            "subject": "General Study",
-            "questions": {
-                "foundation": "What do you already know about this topic? Can you explain it in your own words?",
-                "bridge": "Let's look at where you got stuck. What was the last step you were confident about?",
-                "mastery": "Now try to solve the next part on your own. What would you do first?"
-            },
-            "behavioral_tip": "Remember to let your child think out loud. Resist the urge to jump in with answers!",
-            "example_approach": "This is a general approach for any homework problem. The key is to: 1) Identify what the student knows, 2) Find where they're stuck, 3) Guide them to discover the next step themselves. The goal is not to solve it FOR them, but to help them develop problem-solving strategies they can use independently."
+        .btn.secondary { background: #9c27b0; }
+        .btn.secondary:hover { background: #7b1fa2; }
+        .btn:hover { background: #5568d3; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+        .upload-area {
+            border: 2px dashed #667eea; border-radius: 10px; padding: 30px;
+            margin: 20px 0; text-align: center; cursor: pointer; transition: all 0.3s;
         }
-    
-    try:
-        # Compress image for API efficiency
-        compressed_image = compress_image(image_bytes)
+        .upload-area:hover { background: #f5f5ff; border-color: #5568d3; }
+        .upload-area.dragover { background: #e8f0fe; border-color: #4285f4; }
+        .preview-img { max-width: 100%; max-height: 300px; margin: 20px 0; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        #fileInput { display: none; }
+        .response { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white;
+            border-radius: 15px; 
+            padding: 25px; 
+            margin: 20px 0; 
+            display: none;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+        .response.show { display: block; }
+        .response hr { border: 1px solid rgba(255,255,255,0.3); }
+        .response strong { color: #fff; }
+        .response small { color: rgba(255,255,255,0.8); }
+        .api-key-section { background: #e3f2fd; border: 2px solid #2196f3; border-radius: 10px; padding: 20px; margin: 20px 0; }
+        .input-group { margin: 10px 0; }
+        .input-group label { display: block; color: #1565c0; font-weight: 600; margin-bottom: 5px; }
+        .input-group input { width: 100%; padding: 10px; border: 1px solid #90caf9; border-radius: 5px; font-size: 0.9em; }
+        .key-status { display: inline-block; padding: 5px 10px; border-radius: 5px; font-size: 0.85em; font-weight: 600; margin-left: 10px; }
+        .key-status.saved { background: #c8e6c9; color: #2e7d32; }
+        .key-status.none { background: #ffcdd2; color: #c62828; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 Socratic Parent</h1>
+        <p class="tagline">The Anti-Homework-Solver</p>
         
-        # Prepare the prompt with grade context if provided
-        prompt = SYSTEM_PROMPT
-        if grade:
-            prompt += f"\n\nSTUDENT GRADE LEVEL: {grade}"
+        <div class="status" id="statusDiv">
+            <p class="status-text">✅ Server is running!</p>
+        </div>
         
-        # Create client with the provided API key
-        session_client = genai.Client(api_key=api_key)
+        <div class="api-key-section">
+            <h3 style="color: #1565c0; margin-bottom: 10px;">
+                �� Your API Key 
+                <span class="key-status" id="keyStatus">None</span>
+            </h3>
+            <p style="color: #555; font-size: 0.9em; margin-bottom: 15px;">
+                <strong>Optional:</strong> Store your own Gemini API key securely in your browser. 
+                Get one from <a href="https://makersuite.google.com/app/apikey" target="_blank" style="color: #2196f3;">Google AI Studio</a><br>
+                <em style="color: #666;">If not provided, the server's key will be used (if available)</em>
+            </p>
+            <div class="input-group">
+                <label for="apiKeyInput">Gemini API Key:</label>
+                <input type="password" id="apiKeyInput" placeholder="AIza..." />
+            </div>
+            <button class="btn secondary" onclick="saveApiKey()">Save API Key</button>
+            <button class="btn secondary" onclick="clearApiKey()" style="background: #f44336; margin-top: 10px;">Clear Key</button>
+        </div>
         
-        # Generate response using the modern google.genai API
-        max_retries = 2
-        for attempt in range(max_retries):
-            try:
-                response = session_client.models.generate_content(
-                    model='gemini-2.5-flash',
-                    contents=[
-                        prompt,
-                        types.Part(inline_data=types.Blob(
-                            data=compressed_image,
-                            mime_type='image/jpeg'
-                        ))
-                    ],
-                    config=types.GenerateContentConfig(
-                        temperature=0.7,
-                        top_p=0.95,
-                        max_output_tokens=3072,  # Increased for complete responses
-                        response_mime_type="application/json",  # Request JSON directly
-                    )
-                )
-                break  # Success, exit retry loop
-            except Exception as e:
-                # If quota exceeded or not found, provide intelligent fallback
-                if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e) or "404" in str(e):
-                    return {
-                        "subject": "Homework Analysis (Fallback Mode)",
-                        "questions": {
-                            "foundation": "Let's start with what you remember. Can you explain the main concept in your own words?",
-                            "bridge": "Now show me exactly where you're stuck. What's the last step you understood completely?",
-                            "mastery": "Great! Now that we've discussed it, try the next similar problem on your own. What would you do first?"
-                        },
-                        "behavioral_tip": "Take breaks together. Learning happens best when both parent and child stay patient and curious!",
-                        "example_approach": "ℹ️ Using smart fallback mode (API issue detected).\n\nGeneral coaching approach: 1) Ask your child to read the problem out loud, 2) Have them explain what they think it's asking, 3) Guide them to break it into smaller steps, 4) Let them try each step before helping. The goal is building their confidence and problem-solving skills!",
-                        "solution_steps": []
-                    }
-                if attempt == max_retries - 1:
-                    raise
-                # Retry on other errors
-                continue
+        <div class="info">
+            <p><strong>Version:</strong> Session Management</p>
+            <p><strong>Status:</strong> Ready to upload & analyze</p>
+            <p><strong>Privacy:</strong> Your API key stays in your browser</p>
+        </div>
         
-        # Extract JSON from response with better error handling
-        response_text = response.text.strip()
+        <div id="uploadArea" class="upload-area" onclick="document.getElementById('fileInput').click()">
+            <p style="font-size: 3em; margin: 0;">📸</p>
+            <p style="margin: 10px 0; font-weight: 600;">Click or Drag & Drop</p>
+            <p style="color: #666; font-size: 0.9em;">Upload a homework image (JPG, PNG)</p>
+        </div>
         
-        # Try to extract JSON if wrapped in markdown code blocks
-        if '```json' in response_text:
-            response_text = response_text.split('```json')[1].split('```')[0].strip()
-        elif '```' in response_text:
-            response_text = response_text.split('```')[1].split('```')[0].strip()
+        <input type="file" id="fileInput" accept="image/*" onchange="handleFileSelect(event)">
+        <img id="preview" class="preview-img" style="display: none;">
+        <button class="btn" id="uploadBtn" onclick="uploadImage()">Upload & Analyze</button>
+        <button class="btn" onclick="testAPI()">Test API Connection</button>
         
-        # Try parsing the JSON
-        try:
-            result = json.loads(response_text)
-        except json.JSONDecodeError as json_err:
-            # Try to fix common JSON issues
-            try:
-                # Remove trailing commas
-                fixed_text = response_text.replace(',]', ']').replace(',}', '}')
-                result = json.loads(fixed_text)
-            except:
-                # If still fails, return a structured error response
-                raise HTTPException(
-                    status_code=500, 
-                    detail=f"AI returned incomplete response. Please try again. (Parse error: {str(json_err)})"
-                )
+        <div id="response" class="response"><p id="responseText"></p></div>
+    </div>
+    <script>
+        let selectedFile = null;
         
-        # Validate required fields
-        if not all(key in result for key in ['subject', 'questions', 'behavioral_tip']):
-            raise HTTPException(
-                status_code=500,
-                detail="AI response missing required fields. Please try again."
-            )
-        
-        return result
-        
-    except json.JSONDecodeError as e:
-        # Return helpful error message
-        raise HTTPException(
-            status_code=500, 
-            detail=f"AI returned incomplete response. Please try uploading the image again."
-        )
-    except HTTPException:
-        # Re-raise HTTP exceptions
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"AI analysis error: {str(e)}")
-
-
-@app.post("/auth/google")
-async def google_auth(token: dict):
-    """
-    Verify Google OAuth token and create session
-    Expects: {"id_token": "..."}
-    """
-    if not OAUTH_AVAILABLE or not GOOGLE_CLIENT_ID:
-        raise HTTPException(
-            status_code=400,
-            detail="Google OAuth not configured. Using API key pool instead."
-        )
-    
-    try:
-        # Verify the token
-        idinfo = id_token.verify_oauth2_token(
-            token.get("id_token"),
-            google_requests.Request(),
-            GOOGLE_CLIENT_ID
-        )
-        
-        user_id = idinfo.get("sub")  # Unique Google user ID
-        user_email = idinfo.get("email")
-        
-        # Create session with OAuth token
-        session_id = create_session(
-            user_id=user_id,
-            oauth_token=token.get("id_token")
-        )
-        
-        response = JSONResponse(
-            content={
-                "session_id": session_id,
-                "user_id": user_id,
-                "email": user_email,
-                "auth_type": "oauth"
+        async function checkApiKey() {
+            const apiKey = localStorage.getItem('gemini_api_key');
+            const statusDiv = document.getElementById('statusDiv');
+            const keyStatus = document.getElementById('keyStatus');
+            
+            // Check if server has a key
+            let serverHasKey = false;
+            try {
+                const response = await fetch('/api/test');
+                const data = await response.json();
+                serverHasKey = data.server_key_available;
+            } catch (e) {
+                // Ignore error
             }
-        )
-        response.set_cookie(
-            key="session_id",
-            value=session_id,
-            max_age=SESSION_TIMEOUT,
-            httponly=True,
-            samesite="Lax"
-        )
-        return response
+            
+            if (apiKey) {
+                keyStatus.textContent = '✓ Saved';
+                keyStatus.className = 'key-status saved';
+                document.getElementById('apiKeyInput').value = apiKey;
+                statusDiv.className = 'status';
+                statusDiv.querySelector('.status-text').textContent = '✅ Ready! Using your API key';
+            } else if (serverHasKey) {
+                keyStatus.textContent = '✗ None (using server)';
+                keyStatus.className = 'key-status none';
+                statusDiv.className = 'status';
+                statusDiv.querySelector('.status-text').textContent = '✅ Ready! Using server API key';
+            } else {
+                keyStatus.textContent = '✗ None';
+                keyStatus.className = 'key-status none';
+                statusDiv.className = 'status warning';
+                statusDiv.querySelector('.status-text').textContent = '⚠️ Please save your API key to enable AI analysis';
+            }
+        }
         
-    except Exception as e:
-        raise HTTPException(
-            status_code=401,
-            detail=f"Invalid OAuth token: {str(e)}"
-        )
+        function saveApiKey() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            if (!apiKey) {
+                alert('Please enter an API key');
+                return;
+            }
+            if (!apiKey.startsWith('AIza')) {
+                alert('API key should start with "AIza"');
+                return;
+            }
+            localStorage.setItem('gemini_api_key', apiKey);
+            checkApiKey();
+            showMessage('success', '✓ API key saved to your browser!');
+        }
+        
+        function clearApiKey() {
+            if (confirm('Are you sure you want to clear your API key?')) {
+                localStorage.removeItem('gemini_api_key');
+                document.getElementById('apiKeyInput').value = '';
+                checkApiKey();
+                showMessage('info', 'API key cleared');
+            }
+        }
+        
+        function getApiKey() {
+            return localStorage.getItem('gemini_api_key');
+        }
+        
+        function showMessage(type, message) {
+            const responseDiv = document.getElementById('response');
+            const responseText = document.getElementById('responseText');
+            responseText.innerHTML = `<strong>${message}</strong>`;
+            responseDiv.classList.add('show');
+        }
+        
+        // File upload handlers
+        const uploadArea = document.getElementById('uploadArea');
+        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+        uploadArea.addEventListener('dragleave', () => { uploadArea.classList.remove('dragover'); });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type.startsWith('image/')) { handleFile(files[0]); }
+        });
+        
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file && file.type.startsWith('image/')) { handleFile(file); }
+        }
+        
+        function handleFile(file) {
+            selectedFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const preview = document.getElementById('preview');
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                document.getElementById('uploadBtn').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        async function uploadImage() {
+            console.log('uploadImage called, selectedFile:', selectedFile);
+            if (!selectedFile) {
+                alert('Please select an image first!');
+                return;
+            }
+            const responseDiv = document.getElementById('response');
+            const responseText = document.getElementById('responseText');
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            
+            // Add user's key if available (otherwise server will use its own)
+            const apiKey = getApiKey();
+            if (apiKey) {
+                formData.append('api_key', apiKey);
+            }
+            
+            try {
+                responseText.innerHTML = '<strong>🔄 Analyzing homework...</strong><br><em>This may take a few seconds</em>';
+                responseDiv.classList.add('show');
+                const response = await fetch('/upload', { method: 'POST', body: formData });
+                const data = await response.json();
+                
+                const keyInfo = data.key_source === 'user' ? '🔑 Your key' : 
+                               data.key_source === 'server' ? '🔑 Server key' : 
+                               '⚠️ No key';
+                
+                let html = `<strong>✅ ${data.message}</strong><br>`;
+                html += `<small>File: ${data.filename} | Size: ${data.size} bytes | Key: ${keyInfo}</small>`;
+                
+                // If AI analysis is available, display it nicely
+                if (data.analysis) {
+                    html += `<hr style="margin: 20px 0; border: 1px solid #ddd;">`;
+                    html += `<div style="text-align: left; line-height: 1.8; white-space: pre-wrap;">`;
+                    html += data.analysis.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+                    html += `</div>`;
+                }
+                
+                responseText.innerHTML = html;
+                responseDiv.classList.add('show');
+            } catch (error) {
+                responseText.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+                responseDiv.classList.add('show');
+            }
+        }
+        
+        async function testAPI() {
+            const responseDiv = document.getElementById('response');
+            const responseText = document.getElementById('responseText');
+            
+            try {
+                const response = await fetch('/api/test');
+                const data = await response.json();
+                
+                const apiKey = getApiKey();
+                const userKeyStatus = apiKey ? '✓ Saved in browser' : '✗ Not saved';
+                const serverKeyStatus = data.server_key_available ? '✓ Available on server' : '✗ Not set';
+                
+                responseText.innerHTML = `<strong>API Response:</strong><br>${JSON.stringify(data, null, 2)}<br><br><strong>Your API Key:</strong> ${userKeyStatus}<br><strong>Server API Key:</strong> ${serverKeyStatus}<br><br><em>Upload will use ${apiKey ? 'your key' : (data.server_key_available ? 'server key' : 'no key')}</em>`;
+                responseDiv.classList.add('show');
+            } catch (error) {
+                responseText.innerHTML = `<strong>Error:</strong> ${error.message}`;
+                responseDiv.classList.add('show');
+            }
+        }
+        
+        // Initialize on page load
+        checkApiKey();
+    </script>
+</body>
+</html>
+"""
 
-
-@app.get("/session")
-async def get_session():
-    """Create or retrieve session, return session ID"""
-    cleanup_expired_sessions()
-    session_id = create_session()
-    response = JSONResponse(
-        content={"session_id": session_id, "status": "created"}
-    )
-    response.set_cookie(
-        key="session_id",
-        value=session_id,
-        max_age=SESSION_TIMEOUT,
-        httponly=True,
-        samesite="Lax"
-    )
-    return response
-
-
-@app.get("/", response_class=FileResponse)
+@app.get("/", response_class=HTMLResponse)
 async def root():
-    """Serve the main frontend page"""
-    return FileResponse("static/index.html")
+    return HTML_CONTENT
 
+@app.get("/api/test")
+async def test_endpoint():
+    server_key = os.getenv("GEMINI_API_KEY")
+    return {
+        "status": "success", 
+        "message": "API is working!", 
+        "version": "session-v2-with-fallback", 
+        "ready": True,
+        "server_key_available": bool(server_key)
+    }
 
-@app.get("/health", response_model=HealthResponse)
-async def health_check():
-    """
-    Health check endpoint
-    Returns system status and AI configuration state
-    """
-    return HealthResponse(
-        status="healthy",
-        message="Socratic Parent is ready to transform homework time!",
-        ai_configured=client is not None
-    )
-
-
-@app.post("/analyze", response_model=AnalysisResponse)
-async def analyze_homework(
-    file: UploadFile = File(...),
-    grade: Optional[str] = Form(None),
-    session_id: Optional[str] = Form(None)
-):
-    """
-    Analyze homework image and generate Socratic questioning script
-    
-    Args:
-        file: Image file of homework (JPEG, PNG, etc.)
-        grade: Optional grade level for better context
-    
-    Returns:
-        Coaching card with guided inquiry questions
-    """
-    # Validate file type
-    if not file.content_type or not file.content_type.startswith('image/'):
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid file type. Please upload an image file."
-        )
-    
+async def analyze_homework_with_ai(image_bytes: bytes, api_key: str):
+    """Analyze homework image using Google Gemini and generate Socratic questions"""
     try:
-        # Read image bytes
-        image_bytes = await file.read()
+        client = genai.Client(api_key=api_key)
         
-        # Get API key for this session
-        api_key = None
-        if session_id:
-            api_key = get_session_key(session_id)
-        
-        # Fallback to default if no session
-        if not api_key:
-            api_key = os.getenv("GEMINI_API_KEY")
-        
-        # Analyze with AI
-        result = await analyze_with_ai(image_bytes, grade, api_key)
-        
-        return AnalysisResponse(**result)
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+        prompt = """You are a Socratic teaching assistant helping parents guide their children through homework.
 
+Analyze this homework image and provide:
+1. A brief description of what you see (subject, topic, question type)
+2. 3-5 Socratic questions that guide the student to discover the answer themselves (DO NOT give the answer directly)
+3. Key concepts the student should understand
+
+Format your response as:
+**Subject & Topic:** [description]
+
+**Socratic Questions:**
+1. [Question that helps them understand the problem]
+2. [Question that guides them to identify what they know]
+3. [Question that helps them think about the approach]
+4. [Question that encourages them to try solving]
+5. [Question that helps them verify their answer]
+
+**Key Concepts:**
+- [concept 1]
+- [concept 2]
+- [concept 3]
+
+Remember: Guide, don't solve! Help them think, don't give answers."""
+
+        # Convert bytes to image part
+        import PIL.Image
+        import io
+        image = PIL.Image.open(io.BytesIO(image_bytes))
+        
+        # Convert to RGB if needed (for PNG with palette, etc.)
+        if image.mode in ('RGBA', 'LA', 'P'):
+            rgb_image = PIL.Image.new('RGB', image.size, (255, 255, 255))
+            if image.mode == 'P':
+                image = image.convert('RGBA')
+            rgb_image.paste(image, mask=image.split()[-1] if image.mode in ('RGBA', 'LA') else None)
+            image = rgb_image
+        elif image.mode != 'RGB':
+            image = image.convert('RGB')
+        
+        # Convert to bytes for API
+        img_byte_arr = io.BytesIO()
+        image.save(img_byte_arr, format='JPEG')
+        img_byte_arr.seek(0)
+        
+        # Upload file
+        uploaded_file = client.files.upload(file=img_byte_arr, mime_type='image/jpeg')
+        
+        response = client.models.generate_content(
+            model='gemini-2.0-flash-exp',
+            contents=[prompt, uploaded_file]
+        )
+        return {"success": True, "analysis": response.text}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+@app.post("/upload")
+async def upload_image(file: UploadFile = File(...), api_key: str = Form(None)):
+    if not file.content_type or not file.content_type.startswith('image/'):
+        return JSONResponse(status_code=400, content={"error": "Invalid file type"})
+    
+    contents = await file.read()
+    
+    # Try user's key first, fall back to server key
+    final_key = api_key if api_key else os.getenv("GEMINI_API_KEY")
+    key_source = "user" if api_key else ("server" if final_key else "none")
+    
+    result = {
+        "status": "success",
+        "filename": file.filename,
+        "content_type": file.content_type,
+        "size": len(contents),
+        "has_api_key": bool(final_key),
+        "key_source": key_source,
+    }
+    
+    # If we have an API key, analyze with AI
+    if final_key:
+        ai_result = await analyze_homework_with_ai(contents, final_key)
+        if ai_result["success"]:
+            result["analysis"] = ai_result["analysis"]
+            result["message"] = "Image analyzed successfully!"
+        else:
+            result["message"] = f"Upload successful but AI analysis failed: {ai_result['error']}"
+    else:
+        result["message"] = "Image uploaded but no API key available for AI analysis."
+    
+    return result
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
