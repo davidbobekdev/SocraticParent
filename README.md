@@ -33,18 +33,25 @@ Built on evidence-based educational psychology principles:
 
 ### 🎯 Core Features
 - **📸 Image Upload**: Drag-and-drop or click to upload homework photos
-- **🔄 Step-by-Step Navigation**: Progress through solutions at your pace
-- **📊 Progress Tracking**: Visual progress bar shows completion
-- **🧮 Math Rendering**: Professional LaTeX/KaTeX formatting for equations
-- **📱 Responsive Design**: Works on desktop, tablet, and mobile
+- **🔄 Step-by-Step Navigation**: Progress through solutions at your pace with Previous/Continue buttons
+- **📊 Progress Tracking**: Visual progress bar shows completion status
+- **🧮 Professional Math Rendering**: KaTeX library with Wolfram Alpha-inspired styling
+  - Color-coded components (blue numbers, red exponents, green operators, purple parentheses)
+  - Beautiful gradient display boxes for equations
+  - Inline and display math modes
+- **📱 Fully Responsive**: Optimized for desktop, tablet, and mobile devices
 - **🔒 Privacy First**: Images processed securely, never stored permanently
+- **✨ Smooth Animations**: Step transitions and progress updates
 
-### 🎨 Design Based on Research
-- **Optimal Reading**: 65-character line width for comprehension
-- **Generous Spacing**: 1.75 line height reduces eye strain
-- **Calm Colors**: Blue tones promote focus and learning
-- **Clear Hierarchy**: Typography scales guide attention naturally
-- **Chunked Content**: Related information grouped with visual cues
+### 🎨 Design Based on Educational Psychology Research
+- **Chunking (Miller's Law)**: Complex problems broken into 7±2 manageable steps
+- **Cognitive Load Reduction**: Clean, minimalist interface reduces mental overhead
+- **Optimal Reading**: 65-character line width for maximum comprehension
+- **Generous Spacing**: 1.75 line height reduces eye strain and improves focus
+- **Visual Hierarchy**: Typography scales (2.5em → 0.9em) guide attention naturally
+- **Calm Colors**: Blue tones (#3b82f6) promote focus and learning
+- **Progress Feedback**: Instant visual confirmation of advancement
+- **Chunked Content**: Related information grouped with clear visual boundaries
 
 ## 🚀 Quick Start
 
@@ -88,16 +95,24 @@ Open your browser to: `http://localhost:8000`
 ## 🏗️ Architecture
 
 ### Single-File Application
-The entire application is contained in `main.py` with embedded HTML/CSS/JavaScript:
-- FastAPI backend serves HTML and API endpoints
-- Vanilla JavaScript handles UI interactions
-- KaTeX library for math rendering
-- Google Gemini AI for content analysis
+The entire application is contained in `main.py` (1000+ lines) with embedded HTML/CSS/JavaScript:
+- **Backend**: FastAPI 0.110.0 serves HTML and API endpoints
+- **Frontend**: Vanilla JavaScript with no frameworks (fast, lightweight)
+- **Math Rendering**: KaTeX 0.16.9 with custom Wolfram Alpha-inspired CSS
+- **AI Engine**: Google Gemini 2.5 Flash for intelligent content analysis
+- **Styling**: Embedded CSS with mobile-first responsive design
+
+### Key Technical Features
+- **Step Management**: Dynamic step navigation with state tracking
+- **Math Processing**: KaTeX auto-rendering with dollar sign delimiters
+- **Responsive CSS**: Mobile optimizations (@media max-width: 768px)
+- **Color-Coded Math**: Custom CSS for educational visual hierarchy
+- **Error Recovery**: Robust navigation reset and content clearing
 
 ### File Structure
 ```
-├── main.py              # Complete application (FastAPI + embedded frontend)
-├── Dockerfile           # Container configuration
+├── main.py              # Complete application (1000+ lines, FastAPI + embedded frontend)
+├── Dockerfile           # Container configuration (Python 3.12-slim)
 ├── docker-compose.yml   # Service orchestration
 ├── requirements.txt     # Python dependencies
 ├── railway.json         # Railway deployment config
@@ -134,20 +149,29 @@ Built on research from Nielsen Norman Group and cognitive psychology:
 - **Line Length**: Max 65 characters (optimal reading width)
 - **Font**: Inter system font for native, readable experience
 
-### Colors
+### Colors (Educational Psychology-Based)
 - **Primary Blue**: #3b82f6 (promotes focus and calmness)
 - **Background**: #f8fafc (soft white reduces eye strain)
 - **Text**: #334155 (high contrast for readability)
-- **Accents**: Light blue boxes (#eff6ff) for math and highlights
+- **Math Components** (Wolfram Alpha-inspired):
+  - Numbers: #1e40af (blue) - primary focus
+  - Exponents: #dc2626 (red) - visual distinction
+  - Operators: #059669 (green) - action indicators
+  - Parentheses: #7c3aed (purple) - grouping
+  - Variables: #be123c (rose italic) - unknowns
+- **Display Equations**: Blue gradient boxes (#dbeafe → #eff6ff) with borders and shadows
 
-### Spacing
-- **Section Margins**: 32-48px (clear separation)
-- **Content Padding**: 24-40px (breathing room)
-- **Line Spacing**: 1.75-2.0 (reduces cognitive load)
+### Spacing (Cognitive Load Optimized)
+- **Desktop**: Section margins 32-48px, content padding 24-40px
+- **Mobile**: Reduced to 16-20px margins, 16-24px padding
+- **Line Spacing**: 1.75 (optimal for comprehension)
+- **Step Separation**: 20px between cards
 
 ### Layout
 - **Max Width**: 720px (optimal for reading and focus)
-- **Chunking**: Related content grouped in visual boxes
+- **Chunking**: Related content grouped in bordered visual boxes
+- **Step Cards**: White background, shadow effects, animated transitions
+- **Mobile Optimizations**: Smaller fonts, tighter spacing, optimized touch targets
 - **Progressive Disclosure**: One step visible at a time
 - **Visual Hierarchy**: Size, weight, and color guide attention
 

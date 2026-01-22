@@ -200,23 +200,23 @@ HTML_CONTENT = """
         }
         .step-title {
             color: #0f172a;
-            font-size: 1.75em;
+            font-size: 1.4em;
             font-weight: 700;
             line-height: 1.3;
             letter-spacing: -0.01em;
         }
         .step-content {
             color: #334155;
-            font-size: 1.125em;
-            line-height: 1.75;
+            font-size: 1em;
+            line-height: 1.65;
             max-width: 65ch;
         }
         .step-content p {
-            margin: 24px 0;
+            margin: 20px 0;
         }
         .step-content .step-item {
-            margin: 32px 0;
-            padding: 24px;
+            margin: 24px 0;
+            padding: 16px;
             background: #f8fafc;
             border-radius: 8px;
             border-left: 4px solid #3b82f6;
@@ -224,9 +224,9 @@ HTML_CONTENT = """
         .step-content .step-number-inline {
             font-weight: 700;
             color: #1e40af;
-            font-size: 1em;
+            font-size: 0.95em;
             display: block;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         .step-content ul, .step-content ol {
             margin: 24px 0;
@@ -253,15 +253,77 @@ HTML_CONTENT = """
         /* KaTeX math styling */
         .katex {
             font-size: 1.05em;
+            max-width: 100%;
+            color: #1e3a8a;
         }
         .katex-display {
             margin: 24px 0;
+            overflow-x: auto;
+            overflow-y: hidden;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            padding: 20px 24px;
+            border-radius: 12px;
+            border: 2px solid #3b82f6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
         }
         .step-content .katex-display {
-            background: #f8fafc;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
             padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #3b82f6;
+            border-radius: 10px;
+            border-left: 5px solid #2563eb;
+            border-right: 1px solid #93c5fd;
+            border-top: 1px solid #bfdbfe;
+            border-bottom: 1px solid #93c5fd;
+        }
+        .katex-display > .katex {
+            font-size: 1.15em;
+            white-space: nowrap;
+            color: #1e40af;
+        }
+        /* Fancy superscripts/exponents */
+        .katex .msupsub {
+            color: #dc2626;
+            font-weight: 600;
+        }
+        .katex .vlist-t .vlist-r .vlist > span > span {
+            font-weight: 600;
+        }
+        .katex sup {
+            color: #dc2626;
+            font-weight: 700;
+        }
+        /* Inline math gets subtle highlight */
+        p .katex, li .katex {
+            background: #eff6ff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border-bottom: 2px solid #93c5fd;
+        }
+        /* Fractions */
+        .katex .frac-line {
+            border-bottom-color: #3b82f6 !important;
+            border-bottom-width: 1.5px !important;
+        }
+        /* Parentheses and brackets */
+        .katex .mopen, .katex .mclose {
+            color: #7c3aed;
+            font-weight: 600;
+        }
+        /* Operators */
+        .katex .mbin, .katex .mrel {
+            color: #059669;
+            font-weight: 600;
+        }
+        /* Variables like x, y */
+        .katex .mathit {
+            color: #be123c;
+            font-style: italic;
+            font-weight: 500;
+        }
+        /* Numbers */
+        .katex .mord {
+            color: #1e40af;
+            font-weight: 500;
         }
         .practice-card {
             background: #f0f9ff;
@@ -355,6 +417,107 @@ HTML_CONTENT = """
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+        
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            body {
+                padding: 16px 12px;
+            }
+            .container {
+                border-radius: 8px;
+            }
+            .header {
+                padding: 24px 20px 20px;
+            }
+            h1 {
+                font-size: 1.5em;
+                margin-bottom: 8px;
+            }
+            .tagline {
+                font-size: 0.9em;
+            }
+            .content {
+                padding: 24px 20px;
+            }
+            .upload-section {
+                padding: 24px;
+                margin-bottom: 16px;
+            }
+            .upload-icon {
+                font-size: 2em;
+                margin-bottom: 12px;
+            }
+            .upload-text {
+                font-size: 1em;
+            }
+            .subject-badge {
+                font-size: 0.75em;
+                padding: 6px 12px;
+                margin-bottom: 16px;
+            }
+            .problem-card {
+                padding: 16px;
+                margin-bottom: 20px;
+            }
+            .problem-card .label {
+                font-size: 0.7em;
+                margin-bottom: 6px;
+            }
+            .problem-card .content {
+                font-size: 1em;
+            }
+            .step-header {
+                margin-bottom: 20px;
+                padding-bottom: 16px;
+            }
+            .step-number {
+                font-size: 0.75em;
+                padding: 3px 10px;
+            }
+            .step-title {
+                font-size: 1.35em;
+            }
+            .step-content {
+                font-size: 1em;
+                line-height: 1.6;
+            }
+            .step-content p {
+                margin: 16px 0;
+            }
+            .step-content .step-item {
+                margin: 20px 0;
+                padding: 16px;
+            }
+            .step-content ul, .step-content ol {
+                margin: 16px 0;
+            }
+            .step-content li {
+                margin: 12px 0;
+            }
+            .progress-bar {
+                margin-bottom: 24px;
+            }
+            .navigation {
+                margin-top: 32px;
+                padding-top: 24px;
+                gap: 8px;
+            }
+            .nav-btn {
+                padding: 12px 16px;
+                font-size: 0.9em;
+            }
+            .practice-card {
+                padding: 16px;
+                margin-top: 20px;
+            }
+            .btn {
+                padding: 12px 24px;
+                font-size: 0.95em;
+            }
+            .loading {
+                padding: 32px;
+            }
         }
     </style>
 </head>
@@ -523,24 +686,11 @@ HTML_CONTENT = """
         }
         
         function formatStepContent(content) {
-            // First, convert backtick expressions to styled math expressions
-            content = content.replace(/`([^`]+)`/g, '<span class="math-expr">$1</span>');
-            
-            // Auto-detect and highlight math expressions (numbers with operators)
-            // Match patterns like: 6 ÷ 2, 3 * 3, 6 ÷ 2 = 3, (1 + 2), etc.
-            content = content.replace(/(\d+\s*[+\-×÷*\/]\s*\d+(?:\s*[+\-×÷*\/]\s*\d+)*(?:\s*=\s*\d+)?)/g, '<span class="math-expr">$1</span>');
-            
-            // Match expressions with parentheses like (1 + 2) or 2(1+2)
-            content = content.replace(/(\d*\([^)]+\)(?:\s*[+\-×÷*\/]\s*\d+)?)/g, function(match) {
-                // Don't double-wrap if already wrapped
-                if (!match.includes('class="math-expr"')) {
-                    return '<span class="math-expr">' + match + '</span>';
-                }
-                return match;
-            });
+            // Don't wrap math in spans - let KaTeX handle $ delimiters
+            // Just do basic text formatting
             
             // Convert **text** to bold
-            content = content.replace(/\\*\\*(.+?)\\*\\*/g, '<strong>$1</strong>');
+            content = content.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
             
             // Split into sentences for better readability
             let formatted = '';
@@ -614,6 +764,7 @@ HTML_CONTENT = """
         }
         
         function displayLesson() {
+            console.log('displayLesson called - steps.length:', steps.length);
             document.getElementById('loadingSection').style.display = 'none';
             const lessonSection = document.getElementById('lessonSection');
             lessonSection.style.display = 'block';
@@ -637,10 +788,7 @@ HTML_CONTENT = """
                 html += '</div>';
             });
             
-            if (lessonData.practice) {
-                html += '<div class="practice-card"><div class="label">🎯 Try This Next</div><div class="content">' + lessonData.practice + '</div></div>';
-            }
-            
+            console.log('Setting lessonContent innerHTML');
             document.getElementById('lessonContent').innerHTML = html;
             
             // Render math expressions with KaTeX
@@ -654,14 +802,32 @@ HTML_CONTENT = """
                 });
             }
             
+            console.log('Calling showStep(0)');
             currentStep = 0;
             showStep(0);
         }
         
         function showStep(index) {
+            console.log('showStep called with index:', index);
             document.querySelectorAll('.step-card').forEach(card => card.classList.remove('active'));
             const stepCard = document.getElementById('step' + index);
-            if (stepCard) stepCard.classList.add('active');
+            console.log('stepCard element:', stepCard);
+            if (stepCard) {
+                stepCard.classList.add('active');
+                
+                // Re-render math in the active step
+                if (typeof renderMathInElement !== 'undefined') {
+                    renderMathInElement(stepCard, {
+                        delimiters: [
+                            {left: '$$', right: '$$', display: true},
+                            {left: '$', right: '$', display: false}
+                        ],
+                        throwOnError: false
+                    });
+                }
+            } else {
+                console.error('Step card not found for index:', index);
+            }
             
             currentStep = index;
             updateNavigation();
@@ -684,6 +850,7 @@ HTML_CONTENT = """
         }
         
         function nextStep() {
+            console.log('nextStep called - currentStep:', currentStep, 'steps.length:', steps.length);
             if (currentStep < steps.length - 1) {
                 showStep(currentStep + 1);
             } else {
@@ -724,6 +891,13 @@ HTML_CONTENT = """
             const lessonSection = document.getElementById('lessonSection');
             lessonSection.style.display = 'none';
             lessonSection.classList.remove('show');
+            document.getElementById('lessonContent').innerHTML = '';
+            
+            // Reset navigation
+            const navigation = document.querySelector('.navigation');
+            if (navigation) {
+                navigation.style.display = 'flex';
+            }
         }
     </script>
 </body>
