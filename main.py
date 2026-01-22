@@ -23,16 +23,38 @@ import json
 # Load environment variables
 load_dotenv()
 
+# API Key Pool Management
+# Support multiple keys for key isolation per session
+# Format: API_KEY_1=xxx,API_KEY_2=yyy,API_KEY_3=zzz
+# Or single key: GEMINI_API_KEY=xxx
+api_keys_str = os.getenv("API_KEYS") or os.getenv("GEMINI_API_KEY", "")
+api_keys_list = [key.strip() for key in api_keys_str.split(",") if key.strip()]
+current_key_index = 0
+
+if not api_keys_list:
+    print("⚠️  WARNING: No API keys configured. Set GEMINI_API_KEY or API_KEYS environment variable.")
+    api_keys_list = []
+
 # Session Management
-sessions = {}  # {session_id: {"created": timestamp, "key": api_key}}
+sessions = {}  # {session_id: {"created": timestamp, "key": api_key, "key_index": index}}
 SESSION_TIMEOUT = 24 * 60 * 60  # 24 hours
 
 def create_session():
-    """Create a new session with a unique ID"""
+    """Create a new session with a unique ID and assigned API key"""
+    global current_key_index
     session_id = str(uuid.uuid4())
+    
+    # Assign key from pool in round-robin fashion
+    if api_keys_list:
+        assigned_key = api_keys_list[current_key_index % len(api_keys_list)]
+        current_key_index = (current_key_index + 1) % len(api_keys_list)
+    else:
+        assigned_key = None
+    
     sessions[session_id] = {
         "created": time.time(),
-        "key": os.getenv("GEMINI_API_KEY")
+        "key": assigned_key,
+        "key_index": current_key_index
     }
     return session_id
 
