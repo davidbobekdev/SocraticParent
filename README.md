@@ -75,6 +75,102 @@ docker compose up -d --build
 4. **Access the application**
 Open your browser to: `http://localhost:8000`
 
+## 🚀 Deployment
+
+### Quick Deploy
+
+Run the deployment wizard:
+```bash
+./deploy.sh
+```
+
+This interactive script supports deployment to:
+- **GitHub Pages** (frontend only, free)
+- **Railway** (full stack, $5/mo after trial)
+- **Render** (full stack, free tier)
+- **Fly.io** (full stack, generous free tier)
+
+### Platform-Specific Instructions
+
+#### GitHub Pages (Easiest - Frontend Only)
+
+1. **Push to GitHub:**
+```bash
+git add .
+git commit -m "Deploy to GitHub Pages"
+git push origin main
+```
+
+2. **Enable GitHub Pages:**
+   - Go to repository Settings → Pages
+   - GitHub Actions will automatically deploy
+   - Your site will be at: `https://USERNAME.github.io/REPO-NAME/`
+
+> Users will need their own Gemini API key (free from Google)
+
+#### Railway (Full Stack)
+
+1. **Install Railway CLI:**
+```bash
+npm i -g @railway/cli
+```
+
+2. **Deploy:**
+```bash
+railway login
+railway init
+railway up
+```
+
+3. **Set environment variable:**
+```bash
+railway variables set GEMINI_API_KEY=your_key_here
+```
+
+#### Render (Full Stack)
+
+1. Push code to GitHub
+2. Go to [render.com](https://render.com)
+3. Click "New +" → "Blueprint"
+4. Connect your repository
+5. Render auto-detects `render.yaml`
+6. Set `GEMINI_API_KEY` in environment variables
+
+#### Fly.io (Full Stack)
+
+1. **Install Fly CLI:**
+```bash
+curl -L https://fly.io/install.sh | sh
+```
+
+2. **Deploy:**
+```bash
+flyctl auth login
+flyctl launch
+flyctl secrets set GEMINI_API_KEY=your_key_here
+flyctl deploy
+```
+
+#### Docker (Any Platform)
+
+Deploy to any platform that supports Docker:
+
+```bash
+# Build
+docker build -t socratic-parent .
+
+# Run
+docker run -e GEMINI_API_KEY=your_key -p 8000:8000 socratic-parent
+```
+
+### Deployment Files Included
+
+- `.github/workflows/pages.yml` - GitHub Actions for Pages
+- `render.yaml` - Render.com blueprint
+- `railway.json` - Railway configuration
+- `fly.toml` - Fly.io configuration
+- `Dockerfile` - Universal Docker image
+
 ## 🏗️ Architecture
 
 ```
