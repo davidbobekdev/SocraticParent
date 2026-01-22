@@ -7,55 +7,71 @@ import os
 import base64
 import uuid
 import time
+import json
 from io import BytesIO
 from typing import Optional
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Cookie
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel
 from PIL import Image
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
-import json
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 
 # Load environment variables
 load_dotenv()
 
-# API Key Pool Management
-# Support multiple keys for key isolation per session
-# Format: API_KEY_1=xxx,API_KEY_2=yyy,API_KEY_3=zzz
-# Or single key: GEMINI_API_KEY=xxx
+# OAuth Configuration
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://davidbobekdev.github.io/SocraticParent")
+
+# Fallback API key pool (if OAuth not configured)
 api_keys_str = os.getenv("API_KEYS") or os.getenv("GEMINI_API_KEY", "")
 api_keys_list = [key.strip() for key in api_keys_str.split(",") if key.strip()]
 current_key_index = 0
 
-if not api_keys_list:
-    print("⚠️  WARNING: No API keys configured. Set GEMINI_API_KEY or API_KEYS environment variable.")
-    api_keys_list = []
+if not api_keys_list and not GOOGLE_CLIENT_ID:
+    print("⚠️  WARNING: No authentication configured. Set GOOGLE_CLIENT_ID for OAuth or GEMINI_API_KEY for key pool.")
 
 # Session Management
-sessions = {}  # {session_id: {"created": timestamp, "key": api_key, "key_index": index}}
+sessions = {}  # {session_id: {"created": timestamp, "user_id": str, "oauth_token": str, "key": str}}
 SESSION_TIMEOUT = 24 * 60 * 60  # 24 hours
 
-def create_session():
-    """Create a new session with a unique ID and assigned API key"""
+def create_session(user_id: str = None, oauth_token: str = None):
+    """Create a new session with OAuth token or API key"""
     global current_key_index
     session_id = str(uuid.uuid4())
     
-    # Assign key from pool in round-robin fashion
-    if api_keys_list:
+    # If OAuth token provided, use it
+    if oauth_token:
+        sessions[session_id] = {
+            "created": time.time(),
+            "user_id": user_id,
+            "oauth_token": oauth_token,
+            "key": None  # Will use oauth_token instead
+        }
+    # Otherwise assign from key pool
+    elif api_keys_list:
         assigned_key = api_keys_list[current_key_index % len(api_keys_list)]
         current_key_index = (current_key_index + 1) % len(api_keys_list)
+        sessions[session_id] = {
+            "created": time.time(),
+            "user_id": user_id or "anonymous",
+            "oauth_token": None,
+            "key": assigned_key
+        }
     else:
-        assigned_key = None
+        sessions[session_id] = {
+            "created": time.time(),
+            "user_id": user_id or "anonymous",
+            "oauth_token": None,
+            "key": None
+        }
     
-    sessions[session_id] = {
-        "created": time.time(),
-        "key": assigned_key,
-        "key_index": current_key_index
-    }
     return session_id
 
 def get_session_key(session_id: str) -> Optional[str]:
@@ -306,6 +322,59 @@ async def analyze_with_ai(image_bytes: bytes, grade: Optional[str] = None, api_k
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI analysis error: {str(e)}")
+
+
+@app.post("/auth/google")
+async def google_auth(token: dict):
+    """
+    Verify Google OAuth token and create session
+    Expects: {"id_token": "..."}
+    """
+    if not GOOGLE_CLIENT_ID:
+        raise HTTPException(
+            status_code=400,
+            detail="Google OAuth not configured. Using API key pool instead."
+        )
+    
+    try:
+        # Verify the token
+        idinfo = id_token.verify_oauth2_token(
+            token.get("id_token"),
+            google_requests.Request(),
+            GOOGLE_CLIENT_ID
+        )
+        
+        user_id = idinfo.get("sub")  # Unique Google user ID
+        user_email = idinfo.get("email")
+        
+        # Create session with OAuth token
+        session_id = create_session(
+            user_id=user_id,
+            oauth_token=token.get("id_token")
+        )
+        
+        response = JSONResponse(
+            content={
+                "session_id": session_id,
+                "user_id": user_id,
+                "email": user_email,
+                "auth_type": "oauth"
+            }
+        )
+        response.set_cookie(
+            key="session_id",
+            value=session_id,
+            max_age=SESSION_TIMEOUT,
+            httponly=True,
+            samesite="Lax"
+        )
+        return response
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=401,
+            detail=f"Invalid OAuth token: {str(e)}"
+        )
 
 
 @app.get("/session")

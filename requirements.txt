@@ -3,11 +3,16 @@
 fastapi>=0.110.0
 uvicorn[standard]>=0.27.0
 python-multipart  # Required for file uploads
+python-jose>=3.3.0  # JWT tokens
+passlib>=1.7.4      # Password hashing
 
 # AI & Multimodal
 google-genai>=0.3.0  # The 2026 Google AI SDK
 pillow>=10.2.0       # For image preprocessing/resizing
 python-dotenv>=1.0.0 # To load your API keys
 
-# Security & Utilities
-pydantic-settings>=2.1.0 # Modern environment management
+# Security & OAuth
+pydantic-settings>=2.1.0  # Modern environment management
+google-auth>=2.25.0       # Google authentication
+google-auth-httplib2>=0.2.0  # HTTP transport for Google auth
+google-auth-oauthlib>=1.1.0   # OAuth2 library
