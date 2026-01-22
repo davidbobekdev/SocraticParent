@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="The Anti-Homework-Solver: Transform homework into meaningful learning moments">
     <title>Socratic Parent - Pedagogical Firewall</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         * {
             margin: 0;
@@ -359,8 +360,18 @@
 
         <!-- Main Content -->
         <div class="card">
+            <!-- Auth Section -->
+            <div id="authSection" class="auth-section">
+                <h3>🔐 Sign In</h3>
+                <p>Sign in with your Google account to get started</p>
+                <div id="google-signin-button" style="margin: 1rem 0;"></div>
+                <p style="font-size: 0.9rem; color: #666; margin-top: 1rem;">
+                    Your Gemini quota will be used for analysis. No keys needed!
+                </p>
+            </div>
+            
             <!-- Upload Section -->
-            <div id="uploadSection">
+            <div id="uploadSection" style="display: none;">
                 <h2>Upload Your Child's Homework</h2>
                 <p class="subtitle">Snap a photo or upload an image of the homework problem</p>
 
@@ -466,10 +477,13 @@
         // State
         let selectedFile = null;
         let sessionId = null;
+        let isAuthenticated = false;
         let backendUrl = "https://socratesparent-production.up.railway.app"; // Railway backend
+        const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID"; // Replace with your Google Client ID
 
         // DOM Elements
         const elements = {
+            authSection: document.getElementById('authSection'),
             dropZone: document.getElementById('dropZone'),
             fileInput: document.getElementById('fileInput'),
             imagePreview: document.getElementById('imagePreview'),
@@ -502,11 +516,64 @@
             }
         }
 
-        // Initialize
-        window.addEventListener('DOMContentLoaded', () => {
+        // Handle Google Sign-In
+        async function handleCredentialResponse(response) {
+            try {
+                // Send token to backend
+                const authResponse = await fetch(`${backendUrl}/auth/google`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ id_token: response.credential })
+                });
+
+                if (!authResponse.ok) {
+                    const error = await authResponse.json();
+                    console.warn('OAuth auth failed, using key pool:', error.detail);
+                    // Fallback to key pool
+                    initializeSession();
+                } else {
+                    const data = await authResponse.json();
+                    sessionId = data.session_id;
+                    isAuthenticated = true;
+                    console.log('Authenticated as:', data.email);
+                }
+                
+                // Show upload section
+                showUploadSection();
+            } catch (error) {
+                console.error('Auth error:', error);
+                initializeSession();
+                showUploadSection();
+            }
+        }
+
+        function showUploadSection() {
+            elements.authSection.style.display = 'none';
+            elements.uploadSection.style.display = 'block';
+        }
+
+        // Initialize Google Sign-In button
+        window.onload = function() {
+            google.accounts.id.initialize({
+                client_id: GOOGLE_CLIENT_ID,
+                callback: handleCredentialResponse,
+                ux_mode: 'popup'
+            });
+            
+            google.accounts.id.renderButton(
+                document.getElementById('google-signin-button'),
+                {
+                    theme: 'outline',
+                    size: 'large',
+                    text: 'signin_with'
+                }
+            );
+
+            // Also initialize fallback session
             initializeSession();
-            setupEventListeners();
-        });
+        };
 
         function setupEventListeners() {
             // File upload
