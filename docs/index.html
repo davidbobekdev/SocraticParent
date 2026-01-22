@@ -359,19 +359,6 @@
 
         <!-- Main Content -->
         <div class="card">
-            <!-- API Key Section -->
-            <div class="api-key-section">
-                <h3>🔑 Google Gemini API Key Required</h3>
-                <p>To use this tool, you need a free Google Gemini API key. Your key is stored locally in your browser and never sent to any server except Google's API.</p>
-                <div class="api-key-input-group">
-                    <input type="password" id="apiKeyInput" placeholder="Enter your Gemini API key (e.g., AIza...)">
-                    <button class="btn" onclick="saveApiKey()">Save Key</button>
-                </div>
-                <a href="https://makersuite.google.com/app/apikey" target="_blank" class="get-key-link">
-                    → Get your free API key here
-                </a>
-            </div>
-
             <!-- Upload Section -->
             <div id="uploadSection">
                 <h2>Upload Your Child's Homework</h2>
@@ -475,16 +462,14 @@
     }
     </script>
 
-    <script type="module">
-        import { GoogleGenerativeAI } from "@google/generative-ai";
-
+    <script>
         // State
         let selectedFile = null;
-        let genAI = null;
+        let sessionId = null;
+        let backendUrl = window.location.origin; // Use current origin if same domain, or set to your backend URL
 
         // DOM Elements
         const elements = {
-            apiKeyInput: document.getElementById('apiKeyInput'),
             dropZone: document.getElementById('dropZone'),
             fileInput: document.getElementById('fileInput'),
             imagePreview: document.getElementById('imagePreview'),
@@ -505,9 +490,21 @@
             newAnalysisBtn: document.getElementById('newAnalysisBtn')
         };
 
+        // Initialize session on page load
+        async function initializeSession() {
+            try {
+                const response = await fetch(`${backendUrl}/session`);
+                const data = await response.json();
+                sessionId = data.session_id;
+                console.log('Session initialized:', sessionId);
+            } catch (error) {
+                console.warn('Could not initialize session:', error);
+            }
+        }
+
         // Initialize
         window.addEventListener('DOMContentLoaded', () => {
-            loadApiKey();
+            initializeSession();
             setupEventListeners();
         });
 
@@ -525,30 +522,6 @@
             elements.analyzeBtn.addEventListener('click', analyzeHomework);
             elements.removeBtn.addEventListener('click', removeImage);
             elements.newAnalysisBtn.addEventListener('click', resetApp);
-        }
-
-        window.saveApiKey = function() {
-            const apiKey = elements.apiKeyInput.value.trim();
-            if (!apiKey) {
-                alert('Please enter an API key');
-                return;
-            }
-            
-            try {
-                genAI = new GoogleGenerativeAI(apiKey);
-                localStorage.setItem('gemini_api_key', apiKey);
-                alert('API key saved successfully!');
-            } catch (error) {
-                alert('Invalid API key format');
-            }
-        };
-
-        function loadApiKey() {
-            const savedKey = localStorage.getItem('gemini_api_key');
-            if (savedKey) {
-                elements.apiKeyInput.value = savedKey;
-                genAI = new GoogleGenerativeAI(savedKey);
-            }
         }
 
         function handleFileSelect(e) {
@@ -598,11 +571,6 @@
         }
 
         async function analyzeHomework() {
-            if (!genAI) {
-                alert('Please enter and save your Gemini API key first!');
-                return;
-            }
-
             if (!selectedFile) {
                 alert('Please upload an image first');
                 return;
@@ -613,53 +581,32 @@
             elements.loadingSection.classList.add('active');
 
             try {
-                // Convert image to base64
-                const imageData = await fileToGenerativePart(selectedFile);
+                // Prepare form data
+                const formData = new FormData();
+                formData.append('file', selectedFile);
                 
-                // Get grade level
-                const gradeLevel = elements.gradeSelect.value || 'unknown';
-
-                // Create prompt
-                const prompt = `You are a "Silent Coach" for parents helping their children with homework. Your role is to generate Socratic questions and guidance for parents, not to solve the problem directly.
-
-Grade Level: ${gradeLevel}
-
-Analyze this homework image and provide:
-
-1. SUBJECT: Identify the subject and topic
-2. FOUNDATION QUESTION: A simple starting question to activate prior knowledge
-3. BRIDGE QUESTION: A question that connects what they know to what they need to learn
-4. MASTERY QUESTION: A deeper question that requires synthesis
-5. BEHAVIORAL TIP: A short tip on how to respond if the child gets frustrated
-6. PARENT EXAMPLE: A brief example of how a parent might work through this with their child
-7. SOLUTION STEPS: Break down the complete solution into clear, numbered steps with calculations
-
-Format your response exactly as JSON:
-{
-  "subject": "subject and topic",
-  "foundation_question": "your question",
-  "bridge_question": "your question",
-  "mastery_question": "your question",
-  "behavioral_tip": "your tip",
-  "parent_example": "your example",
-  "solution_steps": ["Step 1: ...", "Step 2: ...", "Step 3: ..."]
-}`;
-
-                // Call Gemini API
-                const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
-                const result = await model.generateContent([prompt, imageData]);
-                const response = await result.response;
-                const text = response.text();
-                
-                // Parse response
-                const jsonMatch = text.match(/\{[\s\S]*\}/);
-                if (!jsonMatch) {
-                    throw new Error('Invalid response format from AI');
+                const grade = elements.gradeSelect.value;
+                if (grade) {
+                    formData.append('grade', grade);
                 }
                 
-                const data = JSON.parse(jsonMatch[0]);
-                
-                // Display results
+                // Include session ID
+                if (sessionId) {
+                    formData.append('session_id', sessionId);
+                }
+
+                // Call backend API
+                const response = await fetch(`${backendUrl}/analyze`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to analyze homework');
+                }
+
+                const data = await response.json();
                 displayResults(data);
 
             } catch (error) {
@@ -670,46 +617,31 @@ Format your response exactly as JSON:
             }
         }
 
-        async function fileToGenerativePart(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    const base64data = reader.result.split(',')[1];
-                    resolve({
-                        inlineData: {
-                            data: base64data,
-                            mimeType: file.type
-                        }
-                    });
-                };
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
-
         function displayResults(data) {
             // Hide loading
             elements.loadingSection.classList.remove('active');
             
             // Populate results
             elements.subjectText.textContent = data.subject;
-            elements.foundationQuestion.textContent = data.foundation_question;
-            elements.bridgeQuestion.textContent = data.bridge_question;
-            elements.masteryQuestion.textContent = data.mastery_question;
+            elements.foundationQuestion.textContent = data.questions.foundation;
+            elements.bridgeQuestion.textContent = data.questions.bridge;
+            elements.masteryQuestion.textContent = data.questions.mastery;
             elements.behavioralTip.textContent = data.behavioral_tip;
-            elements.exampleContent.textContent = data.parent_example;
+            elements.exampleContent.textContent = data.example_approach || 'No example provided';
             
             // Display solution steps
             elements.solutionSteps.innerHTML = '';
-            data.solution_steps.forEach((step, index) => {
-                const stepDiv = document.createElement('div');
-                stepDiv.className = 'step';
-                stepDiv.innerHTML = `
-                    <div class="step-number">Step ${index + 1}</div>
-                    <div>${step}</div>
-                `;
-                elements.solutionSteps.appendChild(stepDiv);
-            });
+            if (data.solution_steps && data.solution_steps.length > 0) {
+                data.solution_steps.forEach((step, index) => {
+                    const stepDiv = document.createElement('div');
+                    stepDiv.className = 'step';
+                    stepDiv.innerHTML = `
+                        <div class="step-number">Step ${index + 1}</div>
+                        <div>${step}</div>
+                    `;
+                    elements.solutionSteps.appendChild(stepDiv);
+                });
+            }
             
             // Show results
             elements.resultsSection.classList.add('active');
