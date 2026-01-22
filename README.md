@@ -1,50 +1,63 @@
-# 🎓 Socratic Parent
+# 🎓 Step-by-Step Learning
 
-**The Anti-Homework-Solver for the 2026 AI-Saturated Era**
+**Transform Homework into Understanding with AI-Powered Step-by-Step Guidance**
 
-Transform homework battles into meaningful learning moments using AI-powered Socratic questioning.
+An educational platform that breaks down complex problems into clear, manageable steps using AI and research-backed learning principles.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.12-blue.svg)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.104-green.svg)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.110-green.svg)
 
-## 🌐 Try It Now!
+## 🌐 Live Application
 
-**[Use Socratic Parent Online →](https://davidbobekdev.github.io/SocraticParent/)**
+**[Try it now at socratesparent-production.up.railway.app →](https://socratesparent-production.up.railway.app/)**
 
-No installation required! Just:
-1. Visit the link above
-2. Get a free [Google Gemini API key](https://makersuite.google.com/app/apikey)
-3. Upload your child's homework
-4. Get instant Socratic coaching guidance
+No installation required! Simply:
+1. Visit the live application
+2. Upload a homework image (math, science, or any subject)
+3. Get instant step-by-step learning guidance
+4. Navigate through each step at your own pace
 
-> Your API key is stored locally in your browser and never sent anywhere except Google's API.
+> Powered by Google Gemini AI with secure, privacy-first processing.
 
 ## 🌟 Philosophy
 
-In an age where AI can instantly solve any homework problem, we take a different approach:
-- **Friction over Speed**: We deliberately slow down to create learning moments
-- **Questions over Answers**: Guide children to discover solutions themselves
-- **Connection over Conflict**: Turn homework time into quality parent-child interaction
+Built on evidence-based educational psychology principles:
+- **Chunking**: Break complex problems into digestible pieces (Miller's Law)
+- **Cognitive Load Reduction**: Clean design minimizes mental overhead
+- **Progressive Learning**: One step at a time, building understanding
+- **Visual Hierarchy**: Clear typography and spacing guide attention
+- **Active Learning**: Engage with content through structured steps
 
 ## ✨ Features
 
-- **📸 Image Upload**: Upload homework photos via drag-and-drop or camera
-- **🤔 Socratic Questions**: Three-tier questioning system (Spark, Climb, Summit)
-- **🎯 Smart Analysis**: Google Gemini AI analyzes homework and generates coaching scripts
-- **📝 Progressive Solution Reveal**: Step-by-step solutions with actual calculations (last resort)
-- **🔒 Privacy First**: Images processed securely, never stored
-- **👨‍👩‍👧 Parent Mode**: Example approaches that help parents understand concepts
+### 🎯 Core Features
+- **📸 Image Upload**: Drag-and-drop or click to upload homework photos
+- **🔄 Step-by-Step Navigation**: Progress through solutions at your pace
+- **📊 Progress Tracking**: Visual progress bar shows completion
+- **🧮 Math Rendering**: Professional LaTeX/KaTeX formatting for equations
+- **📱 Responsive Design**: Works on desktop, tablet, and mobile
+- **🔒 Privacy First**: Images processed securely, never stored permanently
+
+### 🎨 Design Based on Research
+- **Optimal Reading**: 65-character line width for comprehension
+- **Generous Spacing**: 1.75 line height reduces eye strain
+- **Calm Colors**: Blue tones promote focus and learning
+- **Clear Hierarchy**: Typography scales guide attention naturally
+- **Chunked Content**: Related information grouped with visual cues
 
 ## 🚀 Quick Start
 
-### Option 1: Use Online (Easiest!)
+### Using the Live Application
 
-Visit **[https://davidbobekdev.github.io/SocraticParent/](https://davidbobekdev.github.io/SocraticParent/)**
+Visit **[https://socratesparent-production.up.railway.app/](https://socratesparent-production.up.railway.app/)**
 
-No installation needed! Just get a free [Gemini API key](https://makersuite.google.com/app/apikey) and start using it immediately.
+1. **Upload**: Click or drag-and-drop a homework image
+2. **Analyze**: Click "Start Learning" to process the image
+3. **Learn**: Navigate through steps using Previous/Continue buttons
+4. **Practice**: Try the suggested practice problem at the end
 
-### Option 2: Self-Host with Docker
+### Self-Hosting
 
 #### Prerequisites
 
@@ -61,270 +74,314 @@ cd SocraticParent
 
 2. **Configure environment**
 ```bash
-cp .env.example .env
-# Edit .env and add your GEMINI_API_KEY
+echo "GEMINI_API_KEY=your_key_here" > .env
 ```
 
-3. **Start the application**
+3. **Start with Docker**
 ```bash
-./start.sh
-# Or manually:
 docker compose up -d --build
 ```
 
-4. **Access the application**
+4. **Access locally**
 Open your browser to: `http://localhost:8000`
 
-## 🚀 Deployment
+## 🏗️ Architecture
 
-### Quick Deploy
+### Single-File Application
+The entire application is contained in `main.py` with embedded HTML/CSS/JavaScript:
+- FastAPI backend serves HTML and API endpoints
+- Vanilla JavaScript handles UI interactions
+- KaTeX library for math rendering
+- Google Gemini AI for content analysis
 
-Run the deployment wizard:
-```bash
-./deploy.sh
+### File Structure
+```
+├── main.py              # Complete application (FastAPI + embedded frontend)
+├── Dockerfile           # Container configuration
+├── docker-compose.yml   # Service orchestration
+├── requirements.txt     # Python dependencies
+├── railway.json         # Railway deployment config
+├── deploy-railway.sh    # Automated deployment script
+└── docs/               # Project documentation
 ```
 
-This interactive script supports deployment to:
-- **GitHub Pages** (frontend only, free)
-- **Railway** (full stack, $5/mo after trial)
-- **Render** (full stack, free tier)
-- **Fly.io** (full stack, generous free tier)
+## 📋 API Endpoints
 
-### Platform-Specific Instructions
+### `GET /`
+Serves the main application interface
+- **Output**: HTML page with embedded CSS and JavaScript
 
-#### GitHub Pages (Easiest - Frontend Only)
+### `POST /upload`
+Analyzes homework image and returns step-by-step learning content
+- **Input**: Multipart form with `file` (image)
+- **Output**: JSON with structured learning steps, problem description, and practice questions
 
-1. **Push to GitHub:**
+### `GET /health`
+Health check endpoint
+- **Output**: `{"status": "healthy"}`
+
+### `GET /api/test`
+Tests AI model connectivity
+- **Output**: Model availability and configuration status
+
+## 🎨 Design Principles
+
+Built on research from Nielsen Norman Group and cognitive psychology:
+
+### Typography
+- **Body Text**: 1.125em (18px) for comfortable reading
+- **Line Height**: 1.75 for optimal comprehension
+- **Line Length**: Max 65 characters (optimal reading width)
+- **Font**: Inter system font for native, readable experience
+
+### Colors
+- **Primary Blue**: #3b82f6 (promotes focus and calmness)
+- **Background**: #f8fafc (soft white reduces eye strain)
+- **Text**: #334155 (high contrast for readability)
+- **Accents**: Light blue boxes (#eff6ff) for math and highlights
+
+### Spacing
+- **Section Margins**: 32-48px (clear separation)
+- **Content Padding**: 24-40px (breathing room)
+- **Line Spacing**: 1.75-2.0 (reduces cognitive load)
+
+### Layout
+- **Max Width**: 720px (optimal for reading and focus)
+- **Chunking**: Related content grouped in visual boxes
+- **Progressive Disclosure**: One step visible at a time
+- **Visual Hierarchy**: Size, weight, and color guide attention
+
+## 🔧 Configuration
+
+### Environment Variables
+
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `GEMINI_API_KEY` | Google Gemini API key | Yes | - |
+| `PORT` | Server port | No | 8000 |
+
+### Deployment Configuration
+
+#### Railway (Current Production)
+- Automatic deployment on push
+- Environment variables set in Railway dashboard
+- Health checks enabled
+- URL: https://socratesparent-production.up.railway.app/
+
+#### Docker Configuration
+- **Port**: 8000 (mapped from container)
+- **Health Check**: `/health` endpoint monitored
+- **Auto-restart**: Container restarts on failure
+- **Image**: Python 3.12-slim for minimal size
+
+## 📝 How to Use
+
+### For Students and Parents
+
+1. **Capture Your Homework**
+   - Take a clear photo of the problem
+   - Ensure good lighting and legible text
+   - Supports all subjects (math, science, etc.)
+
+2. **Upload**
+   - Click the upload area or drag-and-drop
+   - Preview appears automatically
+   - Click "Start Learning" to analyze
+
+3. **Learn Step-by-Step**
+   - Read each step carefully
+   - Math expressions rendered professionally with KaTeX
+   - Use Previous/Continue buttons to navigate
+   - Take your time - no rush!
+
+4. **Practice**
+   - Try the suggested practice problem
+   - Apply what you learned
+   - Upload a new problem anytime
+
+### Tips for Best Results
+- ✅ Clear, well-lit photos
+- ✅ Full problem visible in frame
+- ✅ Legible handwriting or printed text
+- ✅ One problem at a time
+- ❌ Avoid blurry or dark images
+- ❌ Don't cut off parts of the problem
+
+## 🧪 Testing
+
+### Health Check
 ```bash
-git add .
-git commit -m "Deploy to GitHub Pages"
-git push origin main
+curl https://socratesparent-production.up.railway.app/health
 ```
 
-2. **Enable GitHub Pages:**
-   - Go to repository Settings → Pages
-   - GitHub Actions will automatically deploy
-   - Your site will be at: `https://USERNAME.github.io/REPO-NAME/`
+### Test Upload Locally
+```bash
+curl -X POST http://localhost:8000/upload \
+  -F "file=@homework.jpg"
+```
 
-> Users will need their own Gemini API key (free from Google)
+## 🛠️ Development
 
-#### Railway (Full Stack)
+### Local Development
 
-1. **Install Railway CLI:**
+```bash
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Set environment variable
+export GEMINI_API_KEY="your_key_here"
+
+# Run server
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Visit `http://localhost:8000` to test locally.
+
+### Key Technologies
+
+- **AI Model**: Google Gemini 2.5 Flash (latest, fastest model)
+- **Backend**: FastAPI 0.110.0 with async support
+- **Math Rendering**: KaTeX 0.16.9 for LaTeX expressions
+- **Image Processing**: Pillow (PIL) for image handling
+- **Deployment**: Docker + Railway for production
+- **Frontend**: Vanilla JavaScript (no frameworks for simplicity)
+
+## 🚀 Deployment to Railway
+
+The application is currently deployed at: **https://socratesparent-production.up.railway.app/**
+
+### Deploy Your Own Instance
+
+1. **Install Railway CLI**
 ```bash
 npm i -g @railway/cli
 ```
 
-2. **Deploy:**
+2. **Login and Deploy**
 ```bash
 railway login
 railway init
 railway up
 ```
 
-3. **Set environment variable:**
+3. **Set Environment Variable**
 ```bash
 railway variables set GEMINI_API_KEY=your_key_here
 ```
 
-#### Render (Full Stack)
-
-1. Push code to GitHub
-2. Go to [render.com](https://render.com)
-3. Click "New +" → "Blueprint"
-4. Connect your repository
-5. Render auto-detects `render.yaml`
-6. Set `GEMINI_API_KEY` in environment variables
-
-#### Fly.io (Full Stack)
-
-1. **Install Fly CLI:**
+Or use the included script:
 ```bash
-curl -L https://fly.io/install.sh | sh
+./deploy-railway.sh
 ```
 
-2. **Deploy:**
+### Other Deployment Options
+
+#### Render
+```bash
+# Push to GitHub, then:
+# 1. Go to render.com
+# 2. New Web Service → Connect Repository
+# 3. Render auto-detects configuration
+# 4. Set GEMINI_API_KEY in dashboard
+```
+
+#### Fly.io
 ```bash
 flyctl auth login
 flyctl launch
-flyctl secrets set GEMINI_API_KEY=your_key_here
+flyctl secrets set GEMINI_API_KEY=your_key
 flyctl deploy
 ```
 
 #### Docker (Any Platform)
-
-Deploy to any platform that supports Docker:
-
 ```bash
-# Build
-docker build -t socratic-parent .
-
-# Run
-docker run -e GEMINI_API_KEY=your_key -p 8000:8000 socratic-parent
+docker build -t step-by-step-learning .
+docker run -e GEMINI_API_KEY=key -p 8000:8000 step-by-step-learning
 ```
 
-### Deployment Files Included
+## 📚 Educational Research Foundation
 
-- `.github/workflows/pages.yml` - GitHub Actions for Pages
-- `render.yaml` - Render.com blueprint
-- `railway.json` - Railway configuration
-- `fly.toml` - Fly.io configuration
-- `Dockerfile` - Universal Docker image
+This application implements principles from:
 
-## 🏗️ Architecture
+### Cognitive Load Theory (Sweller, 1988)
+- Chunking information into manageable pieces
+- Progressive disclosure to prevent overwhelm
+- Visual hierarchy guides attention naturally
 
-```
-├── main.py              # FastAPI backend
-├── static/              # Frontend assets
-│   ├── index.html      # Main UI
-│   ├── app.js          # JavaScript logic
-│   └── styles.css      # Design system
-├── Dockerfile           # Container configuration
-├── docker-compose.yml   # Service orchestration
-├── requirements.txt     # Python dependencies
-└── docs/               # Project documentation
-    ├── PROJECT_OVERVIEW.md
-    ├── SYSTEM_LOGIC.md
-    ├── TECHNICAL_SPEC.md
-    └── UI_UX_GUIDELINES.md
-```
+### Nielsen Norman Group UX Research
+- Optimal line length (50-75 characters)
+- Generous white space (1.75-2.0 line height)
+- Clear visual grouping (Gestalt principles)
 
-## 📋 API Endpoints
+### Miller's Law (1956)
+- Information presented in digestible chunks
+- 5-7 steps per lesson for optimal retention
+- Clear separation between concepts
 
-### `POST /analyze`
-Analyzes homework image and returns Socratic coaching script
-- **Input**: Multipart form with `file` (image) and optional `grade` (K-2, 3-5, 6-8, 9-12)
-- **Output**: JSON with questions, tips, example approach, and solution steps
-
-### `GET /health`
-Health check endpoint
-- **Output**: System status and AI configuration state
-
-## 🎨 Design System
-
-- **Colors**: Indigo primary (#4F46E5), emerald secondary (#10B981)
-- **Typography**: System fonts for native feel
-- **Spacing**: Consistent 8px grid system
-- **Animations**: Smooth transitions for better UX
-
-## 🔧 Configuration
-
-### Environment Variables
-
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `GEMINI_API_KEY` | Google Gemini API key | Yes |
-
-### Docker Configuration
-
-- **Port**: 8000 (configurable in docker-compose.yml)
-- **Health Check**: Automatic monitoring
-- **Auto-restart**: Container restarts on failure
-
-## 📝 Usage Example
-
-1. Upload a homework image (math problem, science question, etc.)
-2. Select grade level (optional but recommended)
-3. Receive three Socratic questions to guide your child
-4. Use "Example Approach" if you need concept clarification
-5. Progressive reveal solution steps only as last resort
-
-## 🧪 Testing
-
-Test the API with the included script:
-```bash
-./test_api_detailed.sh test_homework.jpg
-```
-
-Or test with curl:
-```bash
-curl -X POST http://localhost:8000/analyze \
-  -F "file=@homework.jpg" \
-  -F "grade=6-8"
-```
-
-### Health Check
-```bash
-curl http://localhost:8000/health
-```
-
-## 🛠️ Development
-
-### Local Development (without Docker)
-
-```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run server
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
-
-### Project Structure Explained
-
-- **Backend** (`main.py`): FastAPI server with Google Gemini AI (gemini-2.5-flash)
-- **Frontend** (`static/`): Vanilla JS for simplicity and performance
-- **Containerization**: Docker for easy deployment and consistency
-- **Documentation**: Comprehensive guides in `/docs` folder
-- **Tests**: Automated test script for API validation
-
-### Key Technologies
-
-- **AI Model**: Google Gemini 2.5 Flash (latest as of 2026)
-- **Backend**: FastAPI, Pydantic, google-genai SDK
-- **Frontend**: HTML5, CSS3 with gradients/animations, Vanilla JavaScript
-- **Image Processing**: Pillow (PIL) for compression
-- **Deployment**: Docker + Docker Compose
+### Color Psychology for Learning
+- Blue tones promote focus and reduce anxiety
+- High contrast (4.5:1) for accessibility
+- Soft backgrounds reduce eye strain
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) (coming soon).
+Contributions welcome! Areas of interest:
+- Additional subject support
+- Multi-language interface
+- Accessibility improvements
+- Mobile app development
+- Alternative AI model integrations
 
 ## 📄 License
 
-MIT License - see LICENSE file for details
+MIT License - Free to use, modify, and distribute
 
 ## 🙏 Acknowledgments
 
-- Powered by Google Gemini AI
-- Built with FastAPI and vanilla JavaScript
-- Inspired by Socratic teaching methods
+- **Google Gemini AI**: Powers the intelligent content analysis
+- **KaTeX**: Beautiful math rendering library
+- **FastAPI**: Modern, fast Python web framework
+- **Railway**: Seamless deployment platform
+- **Nielsen Norman Group**: UX research and guidelines
+- **Cognitive Psychology Research**: Educational design principles
 
-## 📚 Documentation
+## 📚 Additional Resources
 
-Detailed documentation available in the `/docs` folder:
-- [Project Overview](docs/PROJECT_OVERVIEW.md)
-- [System Logic](docs/SYSTEM_LOGIC.md)
-- [Technical Specification](docs/TECHNICAL_SPEC.md)
-- [UI/UX Guidelines](docs/UI_UX_GUIDELINES.md)
+- [Google Gemini API Documentation](https://ai.google.dev/)
+- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- [KaTeX Documentation](https://katex.org/)
+- [Nielsen Norman Group: Chunking](https://www.nngroup.com/articles/chunking/)
+- [Cognitive Load Theory](https://www.instructionaldesign.org/theories/cognitive-load/)
 
-## 🐛 Known Issues
+## 🐛 Known Issues & Limitations
 
-- API may fall back to generic responses if Gemini quota is exceeded (retry logic helps)
-- Camera feature requires HTTPS in production (works for local development)
-- Very large images (>5MB) may take longer to process
+- **Image Size**: Very large images (>5MB) may timeout
+- **API Quota**: Rate limits apply to free Gemini API tier
+- **Math Notation**: Complex LaTeX may need manual formatting
+- **Language**: Currently English only (multi-language planned)
 
 ## 🚧 Roadmap
 
-- [ ] User accounts and homework history
-- [ ] Multi-language support
-- [ ] Additional AI model options (OpenAI, Anthropic)
-- [ ] Mobile app (iOS/Android)
-- [ ] Teacher dashboard
-- [ ] Analytics for learning progress
+- [ ] User accounts and progress tracking
+- [ ] Multi-language support (Spanish, French, etc.)
+- [ ] Voice narration for steps
+- [ ] Offline mode with cached responses
+- [ ] Mobile native apps (iOS/Android)
+- [ ] Teacher dashboard and analytics
+- [ ] Integration with learning management systems
 
-## 💬 Support
+## 💬 Support & Contact
 
-For issues and questions:
-- Open an issue on GitHub
-- Email: support@socraticparent.com (coming soon)
+- **Issues**: [GitHub Issues](https://github.com/davidbobekdev/SocraticParent/issues)
+- **Live App**: [socratesparent-production.up.railway.app](https://socratesparent-production.up.railway.app/)
+- **Documentation**: See `/docs` folder
 
 ---
 
-**Built with ❤️ for better parent-child learning experiences**
+**Built with ❤️ to make learning accessible and effective**
 
-© 2026 Socratic Parent
+© 2026 Step-by-Step Learning Platform
