@@ -19,8 +19,15 @@ from PIL import Image
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
-from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
+
+# Optional OAuth imports
+try:
+    from google.oauth2 import id_token
+    from google.auth.transport import requests as google_requests
+    OAUTH_AVAILABLE = True
+except ImportError:
+    OAUTH_AVAILABLE = False
+    print("⚠️  OAuth packages not available, OAuth disabled")
 
 # Load environment variables
 load_dotenv()
@@ -330,7 +337,7 @@ async def google_auth(token: dict):
     Verify Google OAuth token and create session
     Expects: {"id_token": "..."}
     """
-    if not GOOGLE_CLIENT_ID:
+    if not OAUTH_AVAILABLE or not GOOGLE_CLIENT_ID:
         raise HTTPException(
             status_code=400,
             detail="Google OAuth not configured. Using API key pool instead."
