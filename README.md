@@ -10,7 +10,7 @@ Transform homework battles into meaningful learning moments using AI-powered Soc
 
 ## 🌐 Try It Now!
 
-**[Use Socratic Parent Online →](https://yourusername.github.io/SocraticParent/)**
+**[Use Socratic Parent Online →](https://davidbobekdev.github.io/SocraticParent/)**
 
 No installation required! Just:
 1. Visit the link above
@@ -40,7 +40,7 @@ In an age where AI can instantly solve any homework problem, we take a different
 
 ### Option 1: Use Online (Easiest!)
 
-Visit **[https://yourusername.github.io/SocraticParent/](https://yourusername.github.io/SocraticParent/)**
+Visit **[https://davidbobekdev.github.io/SocraticParent/](https://davidbobekdev.github.io/SocraticParent/)**
 
 No installation needed! Just get a free [Gemini API key](https://makersuite.google.com/app/apikey) and start using it immediately.
 
@@ -55,7 +55,7 @@ No installation needed! Just get a free [Gemini API key](https://makersuite.goog
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/SocraticParent.git
+git clone https://github.com/davidbobekdev/SocraticParent.git
 cd SocraticParent
 ```
 
