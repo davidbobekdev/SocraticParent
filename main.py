@@ -5,12 +5,14 @@ The "Anti-Homework-Solver" for the 2026 AI-Saturated Era
 
 import os
 import base64
+import uuid
+import time
 from io import BytesIO
 from typing import Optional
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Cookie
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 from PIL import Image
 from google import genai
@@ -20,6 +22,40 @@ import json
 
 # Load environment variables
 load_dotenv()
+
+# Session Management
+sessions = {}  # {session_id: {"created": timestamp, "key": api_key}}
+SESSION_TIMEOUT = 24 * 60 * 60  # 24 hours
+
+def create_session():
+    """Create a new session with a unique ID"""
+    session_id = str(uuid.uuid4())
+    sessions[session_id] = {
+        "created": time.time(),
+        "key": os.getenv("GEMINI_API_KEY")
+    }
+    return session_id
+
+def get_session_key(session_id: str) -> Optional[str]:
+    """Get API key for a session, creating one if needed"""
+    if not session_id or session_id not in sessions:
+        return None
+    
+    session = sessions[session_id]
+    # Check if session expired
+    if time.time() - session["created"] > SESSION_TIMEOUT:
+        del sessions[session_id]
+        return None
+    
+    return session["key"]
+
+def cleanup_expired_sessions():
+    """Remove expired sessions"""
+    current_time = time.time()
+    expired = [sid for sid, s in sessions.items() 
+               if current_time - s["created"] > SESSION_TIMEOUT]
+    for sid in expired:
+        del sessions[sid]
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -130,11 +166,15 @@ def compress_image(image_bytes: bytes, max_size: tuple = (1024, 1024), quality: 
         raise HTTPException(status_code=400, detail=f"Image processing error: {str(e)}")
 
 
-async def analyze_with_ai(image_bytes: bytes, grade: Optional[str] = None) -> dict:
+async def analyze_with_ai(image_bytes: bytes, grade: Optional[str] = None, api_key: Optional[str] = None) -> dict:
     """
     Analyze homework image using Google Gemini AI
     """
-    if not client:
+    # Use provided API key or fallback to default
+    if not api_key:
+        api_key = os.getenv("GEMINI_API_KEY")
+    
+    if not api_key:
         # Fallback response when API key is not configured
         return {
             "subject": "General Study",
@@ -156,11 +196,14 @@ async def analyze_with_ai(image_bytes: bytes, grade: Optional[str] = None) -> di
         if grade:
             prompt += f"\n\nSTUDENT GRADE LEVEL: {grade}"
         
+        # Create client with the provided API key
+        session_client = genai.Client(api_key=api_key)
+        
         # Generate response using the modern google.genai API
         max_retries = 2
         for attempt in range(max_retries):
             try:
-                response = client.models.generate_content(
+                response = session_client.models.generate_content(
                     model='gemini-2.5-flash',
                     contents=[
                         prompt,
@@ -243,6 +286,24 @@ async def analyze_with_ai(image_bytes: bytes, grade: Optional[str] = None) -> di
         raise HTTPException(status_code=500, detail=f"AI analysis error: {str(e)}")
 
 
+@app.get("/session")
+async def get_session():
+    """Create or retrieve session, return session ID"""
+    cleanup_expired_sessions()
+    session_id = create_session()
+    response = JSONResponse(
+        content={"session_id": session_id, "status": "created"}
+    )
+    response.set_cookie(
+        key="session_id",
+        value=session_id,
+        max_age=SESSION_TIMEOUT,
+        httponly=True,
+        samesite="Lax"
+    )
+    return response
+
+
 @app.get("/", response_class=FileResponse)
 async def root():
     """Serve the main frontend page"""
@@ -265,7 +326,8 @@ async def health_check():
 @app.post("/analyze", response_model=AnalysisResponse)
 async def analyze_homework(
     file: UploadFile = File(...),
-    grade: Optional[str] = Form(None)
+    grade: Optional[str] = Form(None),
+    session_id: Optional[str] = Form(None)
 ):
     """
     Analyze homework image and generate Socratic questioning script
@@ -288,8 +350,17 @@ async def analyze_homework(
         # Read image bytes
         image_bytes = await file.read()
         
+        # Get API key for this session
+        api_key = None
+        if session_id:
+            api_key = get_session_key(session_id)
+        
+        # Fallback to default if no session
+        if not api_key:
+            api_key = os.getenv("GEMINI_API_KEY")
+        
         # Analyze with AI
-        result = await analyze_with_ai(image_bytes, grade)
+        result = await analyze_with_ai(image_bytes, grade, api_key)
         
         return AnalysisResponse(**result)
         

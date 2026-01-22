@@ -8,6 +8,20 @@ let selectedFile = null;
 let cameraStream = null;
 let solutionSteps = [];
 let currentStepIndex = 0;
+let sessionId = null;  // Store session ID
+
+// ===== Initialize Session =====
+async function initializeSession() {
+    try {
+        const response = await fetch('/session');
+        const data = await response.json();
+        sessionId = data.session_id;
+        console.log('Session initialized:', sessionId);
+    } catch (error) {
+        console.warn('Failed to initialize session:', error);
+        // Continue anyway - backend will create one on first analyze
+    }
+}
 
 // ===== DOM Elements =====
 const elements = {
@@ -224,6 +238,11 @@ async function analyzeHomework() {
         const grade = elements.gradeSelect.value;
         if (grade) {
             formData.append('grade', grade);
+        }
+        
+        // Include session ID if available
+        if (sessionId) {
+            formData.append('session_id', sessionId);
         }
         
         // Call API with proper error handling
@@ -461,4 +480,9 @@ window.addEventListener('beforeunload', (e) => {
         e.preventDefault();
         e.returnValue = '';
     }
+});
+
+// ===== Initialize on page load =====
+document.addEventListener('DOMContentLoaded', () => {
+    initializeSession();
 });
