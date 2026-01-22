@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Parser</title>
+</head>
+<body>
+    <h1>Testing Lesson Parser</h1>
+    <button onclick="testParser()">Test Parser</button>
+    <pre id="output"></pre>
+
+    <script>
+        let steps = [];
+        let lessonData = {};
+
+        function testParser() {
+            const sampleAnalysis = `**Subject & Topic:** Mathematics - Order of Operations
+
+**The Problem:**
+Calculate: 8 ÷ 2(2+2)
+
+**Step 1: Understanding**
+We need to solve an expression with multiple operations.
+
+**Step 2: Identify the Rules**
+Follow PEMDAS order of operations.
+
+**Step 3: Set Up**
+First solve what's in parentheses.
+
+**Step 4: Solve Part 1**
+2 + 2 = 4
+
+**Step 5: Solve Part 2**
+Now we have 8 ÷ 2(4)
+
+**Step 6: Final Answer**
+8 ÷ 2 = 4, then 4 × 4 = 16
+
+**Practice Question:**
+Try solving: 6 ÷ 3(1+1)`;
+
+            parseAndDisplayLesson(sampleAnalysis);
+            document.getElementById('output').textContent = JSON.stringify({ steps, lessonData }, null, 2);
+        }
+
+        function parseAndDisplayLesson(analysis) {
+            const lines = analysis.split('\n');
+            steps = [];
+            lessonData = {};
+            let currentSection = null;
+            let content = '';
+            
+            console.log('Starting parse...');
+            
+            for (let line of lines) {
+                line = line.trim();
+                if (!line) continue;
+                
+                console.log('Processing line:', line, 'currentSection:', currentSection);
+                
+                if (line.includes('Subject & Topic:')) {
+                    lessonData.subject = line.replace(/\*\*Subject & Topic:\*\*/g, '').replace('Subject & Topic:', '').trim();
+                    console.log('Found subject:', lessonData.subject);
+                } else if (line.includes('The Problem:')) {
+                    if (currentSection && typeof currentSection === 'object' && currentSection.type === 'step' && content) {
+                        steps.push({ title: currentSection.title, content: content.trim() });
+                    }
+                    currentSection = 'problem';
+                    content = '';
+                    console.log('Switched to problem section');
+                } else if (line.match(/\*\*Step \d+:/)) {
+                    if (currentSection === 'problem' && content) {
+                        lessonData.problem = content.trim();
+                        console.log('Saved problem:', lessonData.problem);
+                    }
+                    if (currentSection && typeof currentSection === 'object' && currentSection.type === 'step' && content) {
+                        steps.push({ title: currentSection.title, content: content.trim() });
+                        console.log('Saved step:', currentSection.title);
+                    }
+                    const title = line.replace(/\*\*/g, '').trim();
+                    currentSection = { title: title, type: 'step' };
+                    content = '';
+                    console.log('Started new step:', title);
+                } else if (line.includes('Practice Question:')) {
+                    if (currentSection && typeof currentSection === 'object' && currentSection.type === 'step' && content) {
+                        steps.push({ title: currentSection.title, content: content.trim() });
+                        console.log('Saved final step');
+                    }
+                    currentSection = 'practice';
+                    content = '';
+                    console.log('Switched to practice section');
+                } else {
+                    content += line + ' ';
+                }
+            }
+            
+            if (currentSection === 'practice' && content) {
+                lessonData.practice = content.trim();
+                console.log('Saved practice:', lessonData.practice);
+            } else if (currentSection && typeof currentSection === 'object' && currentSection.type === 'step' && content) {
+                steps.push({ title: currentSection.title, content: content.trim() });
+                console.log('Saved final step');
+            }
+            
+            console.log('Parse complete. Steps:', steps.length, 'Lesson data:', lessonData);
+        }
+    </script>
+</body>
+</html>
