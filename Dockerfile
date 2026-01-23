@@ -23,6 +23,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY ./static ./static
 COPY ./main.py .
 
+# Create data directory for persistent storage (will be mounted as volume)
+RUN mkdir -p /data && chown socratic:socratic /data
+
 # 6. Permissions: Give the non-root user ownership
 RUN chown -R socratic:socratic $APP_HOME
 

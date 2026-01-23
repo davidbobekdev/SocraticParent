@@ -29,8 +29,10 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 1 week
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
 
-# Simple file-based user storage
-USERS_FILE = "users.json"
+# Simple file-based user storage with persistent path
+# Railway volumes mount at /data, fallback to local for development
+DATA_DIR = os.getenv("DATA_DIR", ".")
+USERS_FILE = os.path.join(DATA_DIR, "users.json")
 
 # Pydantic models
 class UserCreate(BaseModel):
@@ -169,7 +171,19 @@ async def login(user: UserLogin):
         )
     
     stored_user = users[user.username]
-    if not verify_password(user.password, stored_user["hashed_password"]):
+    
+    # Try to verify password - handle both old and new hash formats
+    password_valid = False
+    try:
+        password_valid = verify_password(user.password, stored_user["hashed_password"])
+    except Exception as e:
+        # If verification fails, might be old format - try direct bcrypt verify
+        try:
+            password_valid = pwd_context.verify(user.password, stored_user["hashed_password"])
+        except:
+            pass
+    
+    if not password_valid:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
