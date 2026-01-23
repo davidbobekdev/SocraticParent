@@ -3,6 +3,51 @@
  * Handles file upload, camera capture, and API communication
  */
 
+// ===== Authentication =====
+function getToken() {
+    return localStorage.getItem('auth_token');
+}
+
+function logout() {
+    localStorage.removeItem('auth_token');
+    window.location.href = '/';
+}
+
+async function checkAuth() {
+    const token = getToken();
+    if (!token) {
+        window.location.href = '/';
+        return false;
+    }
+    
+    try {
+        const response = await fetch('/api/me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!response.ok) {
+            localStorage.removeItem('auth_token');
+            window.location.href = '/';
+            return false;
+        }
+        
+        const user = await response.json();
+        updateUserInfo(user);
+        return true;
+    } catch (error) {
+        console.error('Auth check failed:', error);
+        window.location.href = '/';
+        return false;
+    }
+}
+
+function updateUserInfo(user) {
+    const userInfoEl = document.getElementById('userInfo');
+    if (userInfoEl && user.username) {
+        userInfoEl.textContent = `Logged in as: ${user.username}`;
+    }
+}
+
 // ===== State Management =====
 let selectedFile = null;
 let cameraStream = null;
@@ -13,7 +58,10 @@ let sessionId = null;  // Store session ID
 // ===== Initialize Session =====
 async function initializeSession() {
     try {
-        const response = await fetch('/session');
+        const token = getToken();
+        const response = await fetch('/session', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
         const data = await response.json();
         sessionId = data.session_id;
         console.log('Session initialized:', sessionId);
@@ -245,12 +293,15 @@ async function analyzeHomework() {
             formData.append('session_id', sessionId);
         }
         
+        const token = getToken();
+        
         // Call API with proper error handling
         const response = await fetch('/analyze', {
             method: 'POST',
             body: formData,
             headers: {
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${token}`
             }
         }).catch(err => {
             throw new Error('Cannot connect to server. Please ensure the application is running.');
@@ -483,6 +534,9 @@ window.addEventListener('beforeunload', (e) => {
 });
 
 // ===== Initialize on page load =====
-document.addEventListener('DOMContentLoaded', () => {
-    initializeSession();
+document.addEventListener('DOMContentLoaded', async () => {
+    const isAuthenticated = await checkAuth();
+    if (isAuthenticated) {
+        initializeSession();
+    }
 });

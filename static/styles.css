@@ -99,6 +99,46 @@ body::before {
 .header {
     text-align: center;
     margin-bottom: var(--spacing-xl);
+    position: relative;
+}
+
+.header-right {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.user-info {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+}
+
+.logout-btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: var(--error-color);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    box-shadow: var(--shadow-sm);
+}
+
+.logout-btn:hover {
+    background: #DC2626;
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+
+.logout-btn:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
 }
 
 .logo {

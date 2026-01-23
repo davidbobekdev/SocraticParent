@@ -3,15 +3,192 @@ Socratic Parent - Simple Version with Image Upload and API Key Session
 """
 
 import os
+import json
+import hashlib
+from datetime import datetime, timedelta
+from typing import Optional
 from google import genai
 from google.genai import types
-from fastapi import FastAPI, File, UploadFile, Form
+from fastapi import FastAPI, File, UploadFile, Form, Depends, HTTPException, status
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.staticfiles import StaticFiles
+from passlib.context import CryptContext
+from jose import JWTError, jwt
+from pydantic import BaseModel
 from dotenv import load_dotenv
 
 load_dotenv()
 
+# Security configurations
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production-$(date +%s)")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 1 week
+
+# Password hashing
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+security = HTTPBearer()
+
+# Simple file-based user storage
+USERS_FILE = "users.json"
+
+# Pydantic models
+class UserCreate(BaseModel):
+    username: str
+    email: str
+    password: str
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+# User management functions
+def load_users():
+    if os.path.exists(USERS_FILE):
+        with open(USERS_FILE, 'r') as f:
+            return json.load(f)
+    return {}
+
+def save_users(users):
+    with open(USERS_FILE, 'w') as f:
+        json.dump(users, f, indent=2)
+
+def verify_password(plain_password, hashed_password):
+    # Truncate password to 72 bytes for bcrypt compatibility
+    if len(plain_password.encode('utf-8')) > 72:
+        plain_password = hashlib.sha256(plain_password.encode('utf-8')).hexdigest()
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password):
+    # Truncate password to 72 bytes for bcrypt compatibility
+    if len(password.encode('utf-8')) > 72:
+        password = hashlib.sha256(password.encode('utf-8')).hexdigest()
+    return pwd_context.hash(password)
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+def get_user(username: str):
+    users = load_users()
+    if username in users:
+        return users[username]
+    return None
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    
+    user = get_user(username=username)
+    if user is None:
+        raise credentials_exception
+    return user
+
 app = FastAPI()
+
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Authentication endpoints
+@app.post("/api/register", response_model=Token)
+async def register(user: UserCreate):
+    users = load_users()
+    
+    # Validation
+    if len(user.username) < 3:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username must be at least 3 characters"
+        )
+    
+    if len(user.password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 6 characters"
+        )
+    
+    if user.username in users:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already registered"
+        )
+    
+    for existing_user in users.values():
+        if existing_user.get("email") == user.email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
+    
+    hashed_password = get_password_hash(user.password)
+    users[user.username] = {
+        "username": user.username,
+        "email": user.email,
+        "hashed_password": hashed_password,
+        "created_at": datetime.utcnow().isoformat()
+    }
+    save_users(users)
+    
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@app.post("/api/login", response_model=Token)
+async def login(user: UserLogin):
+    users = load_users()
+    
+    if user.username not in users:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    stored_user = users[user.username]
+    if not verify_password(user.password, stored_user["hashed_password"]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@app.get("/api/me")
+async def read_users_me(current_user: dict = Depends(get_current_user)):
+    return {
+        "username": current_user["username"],
+        "email": current_user["email"]
+    }
 
 HTML_CONTENT = """
 <!DOCTYPE html>
@@ -906,7 +1083,21 @@ HTML_CONTENT = """
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    return HTML_CONTENT
+    """Serve landing page"""
+    with open("static/landing.html", "r") as f:
+        return f.read()
+
+@app.get("/login.html", response_class=HTMLResponse)
+async def login_page():
+    """Serve login/register page"""
+    with open("static/login.html", "r") as f:
+        return f.read()
+
+@app.get("/app", response_class=HTMLResponse)
+async def app_page():
+    """Serve main app page (auth checked by JavaScript)"""
+    with open("static/index.html", "r") as f:
+        return f.read()
 
 @app.get("/api/test")
 async def test_endpoint():
@@ -988,12 +1179,83 @@ Keep each step clear, concise, and encouraging. Use simple language appropriate 
             model='gemini-2.5-flash',
             contents=[prompt, image_part]
         )
-        return {"success": True, "analysis": response.text}
+        
+        # Parse and structure the response
+        analysis_text = response.text
+        
+        # Extract subject/topic
+        subject = "General Study"
+        if "**Subject & Topic:**" in analysis_text:
+            subject_line = analysis_text.split("**Subject & Topic:**")[1].split("\n")[0].strip()
+            subject = subject_line if subject_line else "General Study"
+        
+        # Extract steps
+        steps = []
+        for i in range(1, 7):
+            step_marker = f"**Step {i}:"
+            if step_marker in analysis_text:
+                step_content = analysis_text.split(step_marker)[1].split("**")[0].strip()
+                steps.append({"step": i, "content": step_content})\n        
+        # Extract practice question
+        practice = ""
+        if "**Practice Question:**" in analysis_text:
+            practice = analysis_text.split("**Practice Question:**")[1].strip()
+        
+        # Return structured format for frontend
+        return {
+            "success": True,
+            "subject": subject,
+            "questions": {
+                "foundation": steps[0]["content"] if len(steps) > 0 else "Let's start by understanding what this problem is asking us to do.",
+                "bridge": steps[2]["content"] if len(steps) > 2 else "Now that we understand the problem, what approach should we take?",
+                "mastery": steps[4]["content"] if len(steps) > 4 else "Can you try to work through the next step yourself?"
+            },
+            "behavioral_tip": "Remember: It's okay to take your time. Learning happens when we think through problems step by step.",
+            "example_approach": analysis_text,
+            "full_analysis": analysis_text,
+            "practice_question": practice
+        }
     except Exception as e:
         return {"success": False, "error": str(e)}
 
+@app.get("/session")
+async def create_session(current_user: dict = Depends(get_current_user)):
+    """Create a session (for compatibility with frontend)"""
+    import uuid
+    return {"session_id": str(uuid.uuid4())}
+
+@app.post("/analyze")
+async def analyze_homework(
+    file: UploadFile = File(...),
+    grade: Optional[str] = Form(None),
+    session_id: Optional[str] = Form(None),
+    current_user: dict = Depends(get_current_user)
+):
+    """Analyze homework image"""
+    if not file.content_type or not file.content_type.startswith('image/'):
+        return JSONResponse(status_code=400, content={"error": "Invalid file type"})
+    
+    contents = await file.read()
+    api_key = os.getenv("GEMINI_API_KEY")
+    
+    if not api_key:
+        return JSONResponse(status_code=500, content={"error": "GEMINI_API_KEY not configured"})\n    
+    try:
+        result = await analyze_homework_with_ai(contents, api_key)
+        
+        if not result.get("success", False):
+            return JSONResponse(status_code=500, content={"error": result.get("error", "Analysis failed")})
+        
+        return result
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
 @app.post("/upload")
-async def upload_image(file: UploadFile = File(...)):
+async def upload_image(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Upload and analyze homework image (protected)"""
     if not file.content_type or not file.content_type.startswith('image/'):
         return JSONResponse(status_code=400, content={"error": "Invalid file type"})
     
