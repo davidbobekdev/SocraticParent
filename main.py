@@ -32,6 +32,13 @@ security = HTTPBearer()
 # Simple file-based user storage with persistent path
 # Railway volumes mount at /data, fallback to local for development
 DATA_DIR = os.getenv("DATA_DIR", ".")
+# Create data directory if it doesn't exist
+if not os.path.exists(DATA_DIR):
+    try:
+        os.makedirs(DATA_DIR, exist_ok=True)
+    except Exception as e:
+        print(f"Warning: Could not create DATA_DIR {DATA_DIR}, falling back to current directory: {e}")
+        DATA_DIR = "."
 USERS_FILE = os.path.join(DATA_DIR, "users.json")
 
 # Pydantic models
@@ -56,8 +63,14 @@ def load_users():
     return {}
 
 def save_users(users):
-    with open(USERS_FILE, 'w') as f:
-        json.dump(users, f, indent=2)
+    try:
+        # Ensure directory exists before writing
+        os.makedirs(os.path.dirname(USERS_FILE), exist_ok=True)
+        with open(USERS_FILE, 'w') as f:
+            json.dump(users, f, indent=2)
+    except Exception as e:
+        print(f"Error saving users: {e}")
+        raise
 
 def verify_password(plain_password, hashed_password):
     # Truncate password to 72 bytes for bcrypt compatibility
@@ -171,19 +184,7 @@ async def login(user: UserLogin):
         )
     
     stored_user = users[user.username]
-    
-    # Try to verify password - handle both old and new hash formats
-    password_valid = False
-    try:
-        password_valid = verify_password(user.password, stored_user["hashed_password"])
-    except Exception as e:
-        # If verification fails, might be old format - try direct bcrypt verify
-        try:
-            password_valid = pwd_context.verify(user.password, stored_user["hashed_password"])
-        except:
-            pass
-    
-    if not password_valid:
+    if not verify_password(user.password, stored_user["hashed_password"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
@@ -212,8 +213,8 @@ HTML_CONTENT = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Learn Step-by-Step</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {

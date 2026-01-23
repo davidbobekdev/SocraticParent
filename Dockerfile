@@ -29,8 +29,9 @@ RUN mkdir -p /data && chown socratic:socratic /data
 # 6. Permissions: Give the non-root user ownership
 RUN chown -R socratic:socratic $APP_HOME
 
-# 7. Switch to Secure User
-USER socratic
+# 7. Run as root to have write access to mounted volumes
+# Note: In production, you'd want proper volume permissions, but for Railway this works
+USER root
 
 # Launch application
 EXPOSE 8000
