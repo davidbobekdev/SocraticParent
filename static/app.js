@@ -3,6 +3,35 @@
  * Handles file upload, camera capture, and API communication
  */
 
+// ===== Math Formatting Utilities =====
+function formatMathContent(text) {
+    if (!text) return '';
+    
+    // Convert newlines to <br> tags
+    let formatted = text.replace(/\n/g, '<br>');
+    
+    // Convert **bold** to <strong>
+    formatted = formatted.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    
+    return formatted;
+}
+
+function renderMath(element) {
+    if (typeof renderMathInElement !== 'undefined') {
+        try {
+            renderMathInElement(element, {
+                delimiters: [
+                    {left: "$$", right: "$$", display: true},
+                    {left: "$", right: "$", display: false}
+                ],
+                throwOnError: false
+            });
+        } catch (e) {
+            console.error('KaTeX rendering error:', e);
+        }
+    }
+}
+
 // ===== Authentication =====
 function getToken() {
     return localStorage.getItem('auth_token');
@@ -338,10 +367,17 @@ elements.analyzeBtn.addEventListener('click', analyzeHomework);
 function displayResults(data) {
     // Populate results
     elements.subjectText.textContent = data.subject || 'General Study';
-    elements.foundationQuestion.textContent = data.questions.foundation || '';
-    elements.bridgeQuestion.textContent = data.questions.bridge || '';
-    elements.masteryQuestion.textContent = data.questions.mastery || '';
+    elements.foundationQuestion.innerHTML = formatMathContent(data.questions.foundation || '');
+    elements.bridgeQuestion.innerHTML = formatMathContent(data.questions.bridge || '');
+    elements.masteryQuestion.innerHTML = formatMathContent(data.questions.mastery || '');
     elements.behavioralTip.textContent = data.behavioral_tip || '';
+    
+    // Render math in question elements after a brief delay
+    setTimeout(() => {
+        renderMath(elements.foundationQuestion);
+        renderMath(elements.bridgeQuestion);
+        renderMath(elements.masteryQuestion);
+    }, 100);
     
     // Populate example approach if available
     if (data.example_approach) {
@@ -446,14 +482,33 @@ elements.resetStepsBtn.addEventListener('click', () => {
 });
 
 // Helper function to render a single step
-function renderStep(stepText, stepNumber) {
+function renderStep(stepData, stepNumber) {
     const stepDiv = document.createElement('div');
     stepDiv.className = 'step-item';
+    
+    // Handle both old string format and new object format
+    let stepTitle = '';
+    let stepContent = '';
+    
+    if (typeof stepData === 'string') {
+        stepContent = stepData;
+    } else if (stepData && typeof stepData === 'object') {
+        stepTitle = stepData.title || '';
+        stepContent = stepData.content || '';
+    }
+    
+    // Format math content
+    const formattedContent = formatMathContent(stepContent);
+    
     stepDiv.innerHTML = `
         <div class="step-number">Step ${stepNumber}</div>
-        <div class="step-text">${stepText}</div>
+        ${stepTitle ? `<div class="step-header"><strong>${stepTitle}</strong></div>` : ''}
+        <div class="step-text">${formattedContent}</div>
     `;
     elements.stepsContainer.appendChild(stepDiv);
+    
+    // Render math in this step
+    renderMath(stepDiv);
 }
 
 // Show example approach button

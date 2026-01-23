@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Login - Socratic Parent</title>
     <style>
         * {
@@ -23,11 +26,12 @@
         
         .auth-container {
             background: white;
-            border-radius: 16px;
+            border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 420px;
+            max-width: 440px;
             width: 100%;
-            padding: 48px;
+            padding: 40px 24px;
+            overflow: hidden;
         }
         
         .logo {
@@ -97,12 +101,14 @@
         
         input {
             width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 1em;
-            transition: all 0.2s;
-        }
+            padding: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s;
+            -webkit-appearance: none;
+            appearance: none;
+            touch-action: manipulation;
         
         input:focus {
             outline: none;
@@ -112,16 +118,18 @@
         
         button[type="submit"] {
             width: 100%;
-            padding: 14px;
+            min-height: 52px;
+            padding: 16px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 8px;
-            font-size: 1.05em;
+            border-radius: 12px;
+            font-size: 17px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
-        }
+            transition: all 0.3s;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
         
         button[type="submit"]:hover {
             transform: translateY(-2px);
@@ -156,6 +164,72 @@
             background: #d1fae5;
             color: #065f46;
             border: 1px solid #6ee7b7;
+        }
+        
+        /* Mobile Optimizations - 2026 Best Practices */
+        @media (max-width: 640px) {
+            body {
+                padding: 12px;
+            }
+            
+            .auth-container {
+                padding: 32px 20px;
+                border-radius: 20px;
+                max-width: 100%;
+            }
+            
+            .logo h1 {
+                font-size: 1.75em;
+            }
+            
+            .logo p {
+                font-size: 0.9em;
+            }
+            
+            .tabs {
+                margin-bottom: 24px;
+            }
+            
+            .tab {
+                padding: 14px 16px;
+                font-size: 15px;
+                min-height: 48px;
+            }
+            
+            input {
+                font-size: 16px !important; /* Prevents iOS zoom */
+                padding: 14px 16px;
+            }
+            
+            button[type="submit"] {
+                min-height: 52px;
+                font-size: 16px;
+                padding: 16px;
+            }
+            
+            label {
+                font-size: 14px;
+                margin-bottom: 6px;
+            }
+            
+            .form-group {
+                margin-bottom: 18px;
+            }
+        }
+        
+        @media (max-width: 380px) {
+            .auth-container {
+                padding: 24px 16px;
+            }
+            
+            .logo h1 {
+                font-size: 1.5em;
+            }
+            
+            .tab {
+                font-size: 14px;
+                padding: 12px 14px;
+            }
         }
     </style>
 </head>

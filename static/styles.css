@@ -926,25 +926,34 @@ body::before {
 
 /* ===== Responsive Design ===== */
 @media (max-width: 768px) {
+    body {
+        padding: 0;
+    }
+    
     .container {
-        padding: var(--spacing-sm);
+        padding: 12px;
+        max-width: 100%;
     }
     
     .logo-text {
-        font-size: var(--font-size-2xl);
+        font-size: 1.5rem;
     }
     
     .tagline {
-        font-size: var(--font-size-base);
+        font-size: 0.875rem;
     }
     
     .upload-card,
     .results-card {
-        padding: var(--spacing-lg);
+        padding: 16px;
+        border-radius: 12px;
+        box-shadow: none;
+        border: 1px solid var(--border-color);
     }
     
     .question-text {
-        font-size: var(--font-size-base);
+        font-size: 0.95rem;
+        line-height: 1.6;
     }
     
     .question-header {
@@ -954,18 +963,162 @@ body::before {
     .question-subtitle {
         width: 100%;
         margin-left: 0;
-        margin-top: var(--spacing-xs);
+        margin-top: 8px;
+    }
+    
+    /* Flatten question cards */
+    .question-card {
+        padding: 14px;
+        margin-bottom: 12px;
+        box-shadow: none;
+        border: 1px solid var(--border-color);
+    }
+    
+    /* Touch-friendly buttons */
+    .btn {
+        min-height: 48px;
+        padding: 14px 20px;
+        font-size: 15px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* Better form controls */
+    input, select, textarea {
+        font-size: 16px !important;
+        min-height: 48px;
+    }
+    
+    /* Flatter step cards */
+    .step-item {
+        padding: 14px;
+        margin-bottom: 12px;
+        box-shadow: none;
+        border: 1px solid var(--secondary-color);
+        border-left-width: 3px;
+    }
+    
+    .step-header {
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+        padding-bottom: 12px;
+    }
+    
+    .step-number {
+        width: 32px;
+        height: 32px;
+        font-size: 0.95rem;
+        flex-shrink: 0;
+    }
+    
+    .step-title {
+        font-size: 0.95rem;
+    }
+    
+    .step-content {
+        font-size: 0.925rem;
+        padding-left: 0;
     }
 }
 
 @media (max-width: 480px) {
+    body {
+        padding: 0;
+    }
+    
+    .container {
+        padding: 8px;
+    }
+    
+    .logo-text {
+        font-size: 1.35rem;
+    }
+    
+    .tagline {
+        font-size: 0.8rem;
+    }
+    
+    .upload-card,
+    .results-card {
+        padding: 12px;
+        border-radius: 8px;
+    }
+    
     .modal-content {
-        width: 95%;
-        padding: var(--spacing-md);
+        width: 100%;
+        padding: 16px;
+        max-height: 90vh;
+        overflow-y: auto;
+        border-radius: 12px 12px 0 0;
     }
     
     .modal-actions {
         flex-direction: column;
+        gap: 10px;
+    }
+    
+    .modal-actions .btn {
+        width: 100%;
+    }
+    
+    /* Minimal padding for question cards */
+    .question-card {
+        padding: 12px;
+        margin-bottom: 10px;
+    }
+    
+    .question-number {
+        font-size: 0.7rem;
+        padding: 3px 8px;
+    }
+    
+    /* Stack nav buttons */
+    .nav-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .nav-buttons .btn {
+        width: 100%;
+    }
+    
+    /* Compact calculation steps */
+    .calculation-step {
+        font-size: 0.9rem;
+        padding: 10px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Compact step items */
+    .step-item {
+        padding: 12px;
+        margin-bottom: 10px;
+    }
+    
+    .step-number {
+        width: 28px;
+        height: 28px;
+        font-size: 0.85rem;
+    }
+    
+    .step-title {
+        font-size: 0.9rem;
+    }
+    
+    .step-content {
+        font-size: 0.875rem;
+    }
+    
+    .step-content p {
+        margin-bottom: 8px;
+    }
+    
+    /* Header spacing */
+    .header {
+        padding: 16px 8px;
     }
 }
 /* Enhanced Visual Additions - Paste at end of existing styles.css */
