@@ -19,9 +19,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 5. Application Layer
-# Copy the backend code and static files
-COPY ./main.py .
+# Copy static files first, then backend code
 COPY ./static ./static
+COPY ./main.py .
 
 # 6. Permissions: Give the non-root user ownership
 RUN chown -R socratic:socratic $APP_HOME

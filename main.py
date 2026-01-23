@@ -867,7 +867,7 @@ HTML_CONTENT = """
             // Just do basic text formatting
             
             // Convert **text** to bold
-            content = content.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            content = content.replace(/\\*\\*(.+?)\\*\\*/g, '<strong>$1</strong>');
             
             // Split into sentences for better readability
             let formatted = '';
@@ -1115,7 +1115,7 @@ async def analyze_homework_with_ai(image_bytes: bytes, api_key: str):
     try:
         client = genai.Client(api_key=api_key)
         
-        prompt = """You are an expert tutor helping students learn step-by-step. Analyze this homework problem and create a structured learning experience.
+        prompt = """You are an expert tutor helping students learn step-by-step. Analyze this homework problem and create a structured learning experience with DETAILED MATHEMATICAL WORKINGS.
 
 Provide your response in EXACTLY this format:
 
@@ -1128,24 +1128,35 @@ Provide your response in EXACTLY this format:
 [Explain what we're looking at and what we need to find]
 
 **Step 2: Identify the Rules**
-[What mathematical rules or concepts apply here?]
+[What mathematical rules or concepts apply here? Write any formulas using $ for inline math like $x = 5$ or $$ for display math like $$\\frac{a}{b}$$]
 
 **Step 3: Set Up**
-[How do we organize the problem? What's the first thing to do?]
+[How do we organize the problem? Show the setup with proper mathematical notation]
 
 **Step 4: Solve Part 1**
-[First calculation or logical step with explanation]
+[Show EVERY calculation step. Example:
+Starting with: $3x + 5 = 20$
+Subtract 5 from both sides: $3x = 15$
+Show ALL intermediate steps!]
 
 **Step 5: Solve Part 2**
-[Second calculation or logical step with explanation]
+[Continue with more detailed calculations. Show:
+- What operation you're doing
+- The intermediate result
+- Why this step makes sense]
 
-**Step 6: Final Answer**
-[Complete the solution and state the answer clearly]
+**Step 6: Verify and Answer**
+[Check the work by substituting back or using another method. State the final answer clearly with units if applicable]
 
 **Practice Question:**
 [A similar but slightly different problem for them to try]
 
-Keep each step clear, concise, and encouraging. Use simple language appropriate for students."""
+IMPORTANT: 
+- Show EVERY calculation step, not just the result
+- Use $ symbols for math notation (e.g., $x^2$, $\\frac{1}{2}$)
+- Include intermediate numerical results
+- Explain what each operation does to the numbers
+Keep language encouraging and appropriate for students."""
 
         # Convert bytes to image part
         import PIL.Image
@@ -1189,13 +1200,35 @@ Keep each step clear, concise, and encouraging. Use simple language appropriate 
             subject_line = analysis_text.split("**Subject & Topic:**")[1].split("\n")[0].strip()
             subject = subject_line if subject_line else "General Study"
         
-        # Extract steps
+        # Extract ALL steps with their titles
         steps = []
-        for i in range(1, 7):
-            step_marker = f"**Step {i}:"
-            if step_marker in analysis_text:
-                step_content = analysis_text.split(step_marker)[1].split("**")[0].strip()
-                steps.append({"step": i, "content": step_content})\n        
+        lines = analysis_text.split('\n')
+        current_step = None
+        current_content = []
+        
+        for line in lines:
+            # Check if line is a step header
+            if line.strip().startswith('**Step ') and ':' in line:
+                # Save previous step if exists
+                if current_step:
+                    steps.append({
+                        "title": current_step,
+                        "content": '\n'.join(current_content).strip()
+                    })
+                # Start new step
+                current_step = line.strip().replace('**', '').strip()
+                current_content = []
+            elif current_step and line.strip() and not line.strip().startswith('**Practice Question'):
+                # Add content to current step
+                current_content.append(line)
+        
+        # Add last step
+        if current_step and current_content:
+            steps.append({
+                "title": current_step,
+                "content": '\n'.join(current_content).strip()
+            })
+        
         # Extract practice question
         practice = ""
         if "**Practice Question:**" in analysis_text:
@@ -1210,6 +1243,7 @@ Keep each step clear, concise, and encouraging. Use simple language appropriate 
                 "bridge": steps[2]["content"] if len(steps) > 2 else "Now that we understand the problem, what approach should we take?",
                 "mastery": steps[4]["content"] if len(steps) > 4 else "Can you try to work through the next step yourself?"
             },
+            "solution_steps": steps,
             "behavioral_tip": "Remember: It's okay to take your time. Learning happens when we think through problems step by step.",
             "example_approach": analysis_text,
             "full_analysis": analysis_text,
@@ -1239,7 +1273,8 @@ async def analyze_homework(
     api_key = os.getenv("GEMINI_API_KEY")
     
     if not api_key:
-        return JSONResponse(status_code=500, content={"error": "GEMINI_API_KEY not configured"})\n    
+        return JSONResponse(status_code=500, content={"error": "GEMINI_API_KEY not configured"})
+    
     try:
         result = await analyze_homework_with_ai(contents, api_key)
         
