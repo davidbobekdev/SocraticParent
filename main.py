@@ -1143,10 +1143,10 @@ Provide your response in EXACTLY this format:
 [Explain what we're looking at and what we need to find]
 
 **Step 2: Identify the Rules**
-[What mathematical rules or concepts apply here? Write any formulas using $ for inline math like $x = 5$ or $$ for display math like $$\\frac{a}{b}$$]
+[What mathematical rules or concepts apply here? Write any formulas using $ for inline math like $x = 5$ or $$ for display math like $$\\frac{a}{b}$$. Always wrap numbers, fractions, and expressions in $ signs!]
 
 **Step 3: Set Up**
-[How do we organize the problem? Show the setup with proper mathematical notation]
+[How do we organize the problem? Show the setup with proper mathematical notation using $ for all numbers and expressions]
 
 **Step 4: Solve Part 1**
 [Show EVERY calculation step. Example:
@@ -1168,9 +1168,10 @@ Show ALL intermediate steps!]
 
 IMPORTANT: 
 - Show EVERY calculation step, not just the result
-- Use $ symbols for math notation (e.g., $x^2$, $\\frac{1}{2}$)
-- Include intermediate numerical results
+- Use $ symbols for ALL math notation including numbers, fractions, and expressions (e.g., $x^2$, $\\frac{1}{2}$, $2/3$, $x = 5$)
+- Include intermediate numerical results wrapped in $ signs
 - Explain what each operation does to the numbers
+- When describing mathematical values in sentences, wrap them in $ (e.g., "the value is $5$" or "divide by $2$")
 Keep language encouraging and appropriate for students."""
 
         # Convert bytes to image part
@@ -1202,7 +1203,7 @@ Keep language encouraging and appropriate for students."""
         )
         
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='models/gemini-2.5-flash',
             contents=[prompt, image_part]
         )
         
@@ -1249,14 +1250,34 @@ Keep language encouraging and appropriate for students."""
         if "**Practice Question:**" in analysis_text:
             practice = analysis_text.split("**Practice Question:**")[1].strip()
         
+        # Generate Socratic questions based on the problem
+        foundation_q = "What information is given in this problem? What are we trying to find?"
+        bridge_q = "Which mathematical concept or formula could help us solve this?"
+        mastery_q = "Can you explain why we need to use these specific steps?"
+        
+        # Try to extract better questions from the analysis
+        try:
+            if len(steps) > 0 and steps[0].get('content'):
+                content_preview = steps[0]['content'][:100] if len(steps[0]['content']) > 100 else steps[0]['content']
+                foundation_q = f"Look at this problem. {content_preview}... What do you notice first?"
+            if len(steps) > 1 and steps[1].get('content'):
+                content_preview = steps[1]['content'][:100] if len(steps[1]['content']) > 100 else steps[1]['content']
+                bridge_q = f"We know the rules. {content_preview}... How should we apply them?"
+            if len(steps) > 2 and steps[2].get('content'):
+                content_preview = steps[2]['content'][:100] if len(steps[2]['content']) > 100 else steps[2]['content']
+                mastery_q = f"Think about the approach: {content_preview}... Why does this make sense?"
+        except Exception as q_error:
+            # Use default questions if extraction fails
+            pass
+        
         # Return structured format for frontend
         return {
             "success": True,
             "subject": subject,
             "questions": {
-                "foundation": steps[0]["content"] if len(steps) > 0 else "Let's start by understanding what this problem is asking us to do.",
-                "bridge": steps[2]["content"] if len(steps) > 2 else "Now that we understand the problem, what approach should we take?",
-                "mastery": steps[4]["content"] if len(steps) > 4 else "Can you try to work through the next step yourself?"
+                "foundation": foundation_q,
+                "bridge": bridge_q,
+                "mastery": mastery_q
             },
             "solution_steps": steps,
             "behavioral_tip": "Remember: It's okay to take your time. Learning happens when we think through problems step by step.",
@@ -1265,7 +1286,11 @@ Keep language encouraging and appropriate for students."""
             "practice_question": practice
         }
     except Exception as e:
-        return {"success": False, "error": str(e)}
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"ERROR in analyze_homework_with_ai: {str(e)}")
+        print(error_details)
+        return {"success": False, "error": str(e), "details": error_details}
 
 @app.get("/session")
 async def create_session(current_user: dict = Depends(get_current_user)):

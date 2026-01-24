@@ -7,11 +7,33 @@
 function formatMathContent(text) {
     if (!text) return '';
     
-    // Convert newlines to <br> tags
-    let formatted = text.replace(/\n/g, '<br>');
+    // Split into paragraphs
+    let paragraphs = text.split('\n').filter(p => p.trim());
     
-    // Convert **bold** to <strong>
-    formatted = formatted.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // Process each paragraph
+    let formatted = paragraphs.map(para => {
+        para = para.trim();
+        
+        // Skip if empty
+        if (!para) return '';
+        
+        // Check if it's a list item
+        if (para.match(/^[\*\-\d+\.]\s/)) {
+            // It's a list item - wrap in <li>
+            let content = para.replace(/^[\*\-\d+\.]\s+/, '');
+            content = content.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            return `<li>${content}</li>`;
+        } else {
+            // Regular paragraph - convert **bold**
+            para = para.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            return `<p>${para}</p>`;
+        }
+    }).join('\n');
+    
+    // Wrap consecutive <li> elements in <ul>
+    formatted = formatted.replace(/(<li>.*?<\/li>\n?)+/gs, match => {
+        return `<ul>${match}</ul>`;
+    });
     
     return formatted;
 }
@@ -24,7 +46,8 @@ function renderMath(element) {
                     {left: "$$", right: "$$", display: true},
                     {left: "$", right: "$", display: false}
                 ],
-                throwOnError: false
+                throwOnError: false,
+                strict: false
             });
         } catch (e) {
             console.error('KaTeX rendering error:', e);
@@ -189,16 +212,20 @@ function handleFileSelect(file) {
     reader.onload = (e) => {
         elements.previewImg.src = e.target.result;
         elements.dropZone.querySelector('.drop-zone-content').style.display = 'none';
+        elements.fileInput.style.display = 'none'; // Hide file input overlay
         elements.imagePreview.classList.remove('hidden');
         elements.analyzeBtn.classList.remove('hidden');
+    };
+    reader.onerror = (e) => {
+        console.error('FileReader error:', e);
+        showError('Error reading file');
     };
     reader.readAsDataURL(file);
 }
 
-// Browse button click
+// Browse button click - file input is now an overlay so this just prevents default
 elements.browseBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    elements.fileInput.click();
+    e.stopPropagation(); // Let the file input overlay handle it
 });
 
 // File input change
@@ -206,6 +233,10 @@ elements.fileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {
         handleFileSelect(file);
+        // Clear input to allow re-selecting same file next time
+        setTimeout(() => {
+            e.target.value = '';
+        }, 1000);
     }
 });
 
@@ -230,18 +261,15 @@ elements.dropZone.addEventListener('drop', (e) => {
     }
 });
 
-// Click on drop zone to browse
-elements.dropZone.addEventListener('click', (e) => {
-    if (e.target === elements.dropZone || e.target.closest('.drop-zone-content')) {
-        elements.fileInput.click();
-    }
-});
+// File input is now an overlay on dropzone, so it handles clicks directly
+// Remove dropzone click handler to avoid conflicts
 
 // Remove image
 elements.removeBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     selectedFile = null;
     elements.fileInput.value = '';
+    elements.fileInput.style.display = 'block'; // Show file input overlay again
     elements.previewImg.src = '';
     elements.imagePreview.classList.add('hidden');
     elements.dropZone.querySelector('.drop-zone-content').style.display = 'flex';
@@ -381,8 +409,14 @@ function displayResults(data) {
     
     // Populate example approach if available
     if (data.example_approach) {
-        elements.exampleContent.innerHTML = `<p>${data.example_approach}</p>`;
+        const formattedExample = formatMathContent(data.example_approach);
+        elements.exampleContent.innerHTML = formattedExample;
         elements.showExampleBtn.style.display = 'inline-flex';
+        
+        // Render math in example content
+        setTimeout(() => {
+            renderMath(elements.exampleContent);
+        }, 100);
     } else {
         elements.exampleContent.innerHTML = `
             <p><strong>Concept Overview:</strong> The problem requires understanding the relationship between the known and unknown elements.</p>
@@ -420,15 +454,25 @@ function displayResults(data) {
     elements.exampleSection.classList.add('hidden');
     elements.showExampleBtn.textContent = '💡 Need Help? Show Example Approach';
     
+    // Reset upload state for next image
+    selectedFile = null;
+    elements.fileInput.value = '';
+    elements.fileInput.style.display = 'block'; // Show file input overlay again
+    elements.previewImg.src = '';
+    elements.imagePreview.classList.add('hidden');
+    elements.dropZone.querySelector('.drop-zone-content').style.display = 'flex';
+    elements.analyzeBtn.classList.add('hidden');
+    
     // Show results section
     showSection('results');
 }
 
 // New analysis button
-elements.newAnalysisBtn.addEventListener('click', () => {
+elements.newAnalysisBtn.addEventListener('click', (e) => {
     // Reset state
     selectedFile = null;
     elements.fileInput.value = '';
+    elements.fileInput.style.display = 'block'; // Show file input overlay
     elements.previewImg.src = '';
     elements.imagePreview.classList.add('hidden');
     elements.dropZone.querySelector('.drop-zone-content').style.display = 'flex';
@@ -438,19 +482,30 @@ elements.newAnalysisBtn.addEventListener('click', () => {
     
     // Show upload section
     showSection('upload');
+    
+    // Remove focus to prevent purple background
+    e.target.blur();
 });
 
 // Solution Steps - Show/Hide button
-elements.showStepsBtn.addEventListener('click', () => {
+elements.showStepsBtn.addEventListener('click', (e) => {
     const isHidden = elements.stepsSection.classList.contains('hidden');
     
     if (isHidden) {
+        // Close example section if it's open
+        elements.exampleSection.classList.add('hidden');
+        elements.showExampleBtn.textContent = '💡 Need Help? Show Example Approach';
+        
+        // Open steps section
         elements.stepsSection.classList.remove('hidden');
         elements.showStepsBtn.textContent = '🔼 Hide Solution Steps';
     } else {
         elements.stepsSection.classList.add('hidden');
         elements.showStepsBtn.textContent = '📋 Show Solution Steps';
     }
+    
+    // Remove focus to prevent purple background
+    e.target.blur();
 });
 
 // Solution Steps - Next Step button
@@ -512,16 +567,24 @@ function renderStep(stepData, stepNumber) {
 }
 
 // Show example approach button
-elements.showExampleBtn.addEventListener('click', () => {
+elements.showExampleBtn.addEventListener('click', (e) => {
     const isHidden = elements.exampleSection.classList.contains('hidden');
     
     if (isHidden) {
+        // Close steps section if it's open
+        elements.stepsSection.classList.add('hidden');
+        elements.showStepsBtn.textContent = '📋 Show Solution Steps';
+        
+        // Open example section
         elements.exampleSection.classList.remove('hidden');
         elements.showExampleBtn.textContent = '🔼 Hide Example Approach';
     } else {
         elements.exampleSection.classList.add('hidden');
         elements.showExampleBtn.textContent = '💡 Need Help? Show Example Approach';
     }
+    
+    // Remove focus to prevent purple background
+    e.target.blur();
 });
 
 // ===== Error Handling =====

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; }
+        button { padding: 10px 20px; margin: 10px; cursor: pointer; }
+        #log { background: #f5f5f5; padding: 10px; margin: 10px 0; min-height: 100px; max-height: 400px; overflow-y: auto; }
+        .success { color: green; }
+        .error { color: red; }
+        img { max-width: 300px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>File Upload Test</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Basic File Input</h2>
+        <input type="file" id="fileInput1" accept="image/*">
+        <button onclick="testFileInput1()">Check File</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 2: Hidden File Input (like app)</h2>
+        <input type="file" id="fileInput2" accept="image/*" hidden>
+        <button onclick="triggerFileInput2()">Browse Files</button>
+        <div id="preview2"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 3: File Input with Capture (should force camera)</h2>
+        <input type="file" id="fileInput3" accept="image/*" capture="environment">
+        <button onclick="testFileInput3()">Check File</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 4: Repeated Selection</h2>
+        <input type="file" id="fileInput4" accept="image/*" hidden>
+        <button onclick="triggerFileInput4()">Browse Files (Test Multiple Times)</button>
+        <div id="preview4"></div>
+        <div id="selectionCount">Selections: 0</div>
+    </div>
+    
+    <div id="log"></div>
+    
+    <script>
+        let selectionCount = 0;
+        
+        function log(message, isError = false) {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = isError ? 'error' : 'success';
+            entry.textContent = new Date().toLocaleTimeString() + ' - ' + message;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function testFileInput1() {
+            const input = document.getElementById('fileInput1');
+            if (input.files.length > 0) {
+                log(`✓ File selected: ${input.files[0].name} (${input.files[0].size} bytes)`);
+            } else {
+                log('✗ No file selected', true);
+            }
+        }
+        
+        function triggerFileInput2() {
+            const input = document.getElementById('fileInput2');
+            log('Triggering file input 2...');
+            input.value = ''; // Clear to allow re-selection
+            input.click();
+        }
+        
+        document.getElementById('fileInput2').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                log(`✓ File 2 selected: ${file.name} (${file.size} bytes)`);
+                const preview = document.getElementById('preview2');
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                log('✗ No file selected in input 2', true);
+            }
+        });
+        
+        function testFileInput3() {
+            const input = document.getElementById('fileInput3');
+            if (input.files.length > 0) {
+                log(`✓ File selected: ${input.files[0].name} (${input.files[0].size} bytes)`);
+            } else {
+                log('✗ No file selected', true);
+            }
+        }
+        
+        function triggerFileInput4() {
+            const input = document.getElementById('fileInput4');
+            log('Triggering file input 4 (clearing value first)...');
+            input.value = '';
+            input.click();
+        }
+        
+        document.getElementById('fileInput4').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            selectionCount++;
+            document.getElementById('selectionCount').textContent = `Selections: ${selectionCount}`;
+            if (file) {
+                log(`✓ File 4 selected (#${selectionCount}): ${file.name} (${file.size} bytes)`);
+                const preview = document.getElementById('preview4');
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                log('✗ No file selected in input 4', true);
+            }
+        });
+        
+        log('Test page loaded. Try each test on your mobile device.');
+        log('Test 2 simulates the app behavior.');
+        log('Test 3 will force camera mode (not gallery).');
+        log('Test 4 tests repeated selections.');
+    </script>
+</body>
+</html>
