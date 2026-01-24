@@ -20,6 +20,169 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# API Key Rotation System
+class APIKeyRotator:
+    """Manages multiple Gemini API keys with intelligent rotation and recovery"""
+    def __init__(self):
+        self.keys = []
+        self.usage_file = os.path.join(os.getenv("DATA_DIR", "."), "api_key_usage.json")
+        self.daily_limit = 18  # Conservative limit (20 - 2 buffer)
+        self._load_keys()
+        self._load_usage()
+    
+    def _load_keys(self):
+        """Load all available API keys from environment"""
+        # Try numbered keys first (GEMINI_API_KEY_1, GEMINI_API_KEY_2, etc.)
+        i = 1
+        while True:
+            key = os.getenv(f"GEMINI_API_KEY_{i}")
+            if key:
+                self.keys.append(key)
+                i += 1
+            else:
+                break
+        
+        # Fallback to single key if no numbered keys found
+        if not self.keys:
+            single_key = os.getenv("GEMINI_API_KEY")
+            if single_key:
+                self.keys.append(single_key)
+        
+        print(f"🔑 Loaded {len(self.keys)} API key(s) for rotation")
+    
+    def _load_usage(self):
+        """Load usage tracking from file"""
+        if os.path.exists(self.usage_file):
+            try:
+                with open(self.usage_file, 'r') as f:
+                    data = json.load(f)
+                    self.usage = data.get('usage', {})
+                    self.exhausted_keys = data.get('exhausted_keys', {})
+                    self.invalid_keys = data.get('invalid_keys', [])
+            except:
+                self.usage = {}
+                self.exhausted_keys = {}
+                self.invalid_keys = []
+        else:
+            self.usage = {}
+            self.exhausted_keys = {}  # {key_id: timestamp_when_exhausted}
+            self.invalid_keys = []  # List of key indices that are invalid
+        
+        # Check if exhausted keys can be recovered
+        self._recover_exhausted_keys()
+    
+    def _save_usage(self):
+        """Save usage tracking to file"""
+        try:
+            os.makedirs(os.path.dirname(self.usage_file), exist_ok=True)
+            with open(self.usage_file, 'w') as f:
+                json.dump({
+                    'usage': self.usage,
+                    'exhausted_keys': self.exhausted_keys,
+                    'invalid_keys': self.invalid_keys
+                }, f, indent=2)
+        except Exception as e:
+            print(f"Warning: Could not save API key usage: {e}")
+    
+    def _recover_exhausted_keys(self):
+        """Check if exhausted keys can be recovered after 24 hours"""
+        now = datetime.now()
+        recovered = []
+        
+        for key_id, exhausted_time in list(self.exhausted_keys.items()):
+            try:
+                exhausted_dt = datetime.fromisoformat(exhausted_time)
+                # If more than 24 hours have passed, recover the key
+                if (now - exhausted_dt).total_seconds() >= 86400:  # 24 hours
+                    self.usage[key_id] = 0
+                    recovered.append(key_id)
+                    del self.exhausted_keys[key_id]
+            except:
+                # If parsing fails, just recover it
+                del self.exhausted_keys[key_id]
+        
+        if recovered:
+            print(f"♻️ Recovered {len(recovered)} API key(s) after 24-hour cooldown")
+            self._save_usage()
+    
+    def mark_key_exhausted(self, key_index: int):
+        """Mark a key as exhausted with timestamp"""
+        key_id = f"key_{key_index}"
+        self.exhausted_keys[key_id] = datetime.now().isoformat()
+        self.usage[key_id] = self.daily_limit
+        self._save_usage()
+        print(f"⏰ API Key {key_index + 1} exhausted, will recover in 24 hours")
+    
+    def mark_key_invalid(self, key_index: int):
+        """Mark a key as invalid (won't be retried)"""
+        if key_index not in self.invalid_keys:
+            self.invalid_keys.append(key_index)
+            self._save_usage()
+            print(f"❌ API Key {key_index + 1} marked as invalid")
+    
+    def get_next_key_to_try(self) -> Optional[tuple[str, int]]:
+        """Get next API key to try (key, index)"""
+        if not self.keys:
+            return None, None
+        
+        self._recover_exhausted_keys()
+        
+        # Find first available key that's not exhausted or invalid
+        for i, key in enumerate(self.keys):
+            if i in self.invalid_keys:
+                continue
+            
+            key_id = f"key_{i}"
+            
+            # Check if key is exhausted
+            if key_id in self.exhausted_keys:
+                continue
+            
+            # Check usage
+            current_usage = self.usage.get(key_id, 0)
+            if current_usage < self.daily_limit:
+                return key, i
+        
+        return None, None
+    
+    def record_success(self, key_index: int):
+        """Record successful API call"""
+        key_id = f"key_{key_index}"
+        self.usage[key_id] = self.usage.get(key_id, 0) + 1
+        self._save_usage()
+        remaining = self.daily_limit - self.usage[key_id]
+        print(f"✅ API Key {key_index + 1} usage: {self.usage[key_id]}/{self.daily_limit} ({remaining} left)")
+    
+    def get_total_remaining(self) -> int:
+        """Get total remaining requests across all active keys"""
+        self._recover_exhausted_keys()
+        total = 0
+        for i in range(len(self.keys)):
+            if i in self.invalid_keys:
+                continue
+            key_id = f"key_{i}"
+            if key_id in self.exhausted_keys:
+                continue
+            used = self.usage.get(key_id, 0)
+            total += max(0, self.daily_limit - used)
+        return total
+    
+    def get_status(self) -> dict:
+        """Get detailed status of all keys"""
+        self._recover_exhausted_keys()
+        status = {
+            "total_keys": len(self.keys),
+            "active_keys": 0,
+            "exhausted_keys": len(self.exhausted_keys),
+            "invalid_keys": len(self.invalid_keys),
+            "total_remaining": self.get_total_remaining()
+        }
+        status["active_keys"] = status["total_keys"] - status["exhausted_keys"] - status["invalid_keys"]
+        return status
+
+# Initialize API key rotator
+api_key_rotator = APIKeyRotator()
+
 # Security configurations
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production-$(date +%s)")
 ALGORITHM = "HS256"
@@ -292,6 +455,22 @@ async def get_user_status(current_user: dict = Depends(get_current_user)):
         "is_premium": user.get("is_premium", False),
         "scans_left": user.get("daily_scans_left", 3) if not user.get("is_premium") else -1
     }
+
+@app.post("/api/admin/upgrade-test")
+async def admin_upgrade_test(username: str, admin_secret: str):
+    """Admin endpoint for testing premium upgrades - REMOVE IN PRODUCTION"""
+    if admin_secret != "TEMP_ADMIN_2026":
+        raise HTTPException(status_code=403, detail="Invalid admin secret")
+    
+    users = load_users()
+    if username not in users:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    users[username]["is_premium"] = True
+    users[username]["paddle_subscription_id"] = "test_manual_upgrade"
+    save_users(users)
+    
+    return {"success": True, "message": f"User {username} upgraded to premium"}
 
 HTML_CONTENT = """
 <!DOCTYPE html>
@@ -1204,21 +1383,38 @@ async def app_page():
 
 @app.get("/api/test")
 async def test_endpoint():
-    server_key = os.getenv("GEMINI_API_KEY")
+    status = api_key_rotator.get_status()
     return {
         "status": "success", 
         "message": "API is working!", 
-        "version": "session-v2-with-fallback", 
+        "version": "v3-smart-rotation", 
         "ready": True,
-        "server_key_available": bool(server_key)
+        "api_keys": status
     }
 
-async def analyze_homework_with_ai(image_bytes: bytes, api_key: str):
-    """Analyze homework image using Google Gemini and generate Socratic questions"""
-    try:
-        client = genai.Client(api_key=api_key)
+async def analyze_homework_with_ai(image_bytes: bytes, max_retries: int = None):
+    """Analyze homework image using Google Gemini with intelligent key rotation"""
+    
+    # Try all available keys
+    max_retries = max_retries or len(api_key_rotator.keys)
+    last_error = None
+    
+    for attempt in range(max_retries):
+        # Get next key to try
+        api_key, key_index = api_key_rotator.get_next_key_to_try()
         
-        prompt = """You are an expert tutor helping students learn step-by-step. Analyze this homework problem and create a structured learning experience with DETAILED MATHEMATICAL WORKINGS.
+        if api_key is None:
+            # No keys available, return user-friendly error
+            return {
+                "success": False,
+                "error": "Service temporarily at capacity. Please try again in a few moments.",
+                "retry_after": "1 hour"
+            }
+        
+        try:
+            client = genai.Client(api_key=api_key)
+            
+            prompt = """You are an expert tutor helping students learn step-by-step. Analyze this homework problem and create a structured learning experience with DETAILED MATHEMATICAL WORKINGS.
 
 Provide your response in EXACTLY this format:
 
@@ -1261,124 +1457,152 @@ IMPORTANT:
 - Explain what each operation does to the numbers
 - When describing mathematical values in sentences, wrap them in $ (e.g., "the value is $5$" or "divide by $2$")
 Keep language encouraging and appropriate for students."""
-
-        # Convert bytes to image part
-        import PIL.Image
-        import io
-        import base64
+            
+            # Convert bytes to image part
+            import PIL.Image
+            import io
+            import base64
+            
+            image = PIL.Image.open(io.BytesIO(image_bytes))
+            
+            # Convert to RGB if needed (for PNG with palette, etc.)
+            if image.mode in ('RGBA', 'LA', 'P'):
+                rgb_image = PIL.Image.new('RGB', image.size, (255, 255, 255))
+                if image.mode == 'P':
+                    image = image.convert('RGBA')
+                rgb_image.paste(image, mask=image.split()[-1] if image.mode in ('RGBA', 'LA') else None)
+                image = rgb_image
+            elif image.mode != 'RGB':
+                image = image.convert('RGB')
+            
+            # Convert to bytes for API
+            img_byte_arr = io.BytesIO()
+            image.save(img_byte_arr, format='JPEG')
+            img_data = img_byte_arr.getvalue()
+            
+            # Create image part for Gemini API
+            image_part = types.Part.from_bytes(
+                data=img_data,
+                mime_type='image/jpeg'
+            )
+            
+            response = client.models.generate_content(
+                model='models/gemini-2.5-flash',
+                contents=[prompt, image_part]
+            )
+            
+            # Parse and structure the response
+            analysis_text = response.text
+            
+            # Extract subject/topic
+            subject = "General Study"
+            if "**Subject & Topic:**" in analysis_text:
+                subject_line = analysis_text.split("**Subject & Topic:**")[1].split("\n")[0].strip()
+                subject = subject_line if subject_line else "General Study"
+            
+            # Extract ALL steps with their titles
+            steps = []
+            lines = analysis_text.split('\n')
+            current_step = None
+            current_content = []
+            
+            for line in lines:
+                # Check if line is a step header
+                if line.strip().startswith('**Step ') and ':' in line:
+                    # Save previous step if exists
+                    if current_step:
+                        steps.append({
+                            "title": current_step,
+                            "content": '\n'.join(current_content).strip()
+                        })
+                    # Start new step
+                    current_step = line.strip().replace('**', '').strip()
+                    current_content = []
+                elif current_step and line.strip() and not line.strip().startswith('**Practice Question'):
+                    # Add content to current step
+                    current_content.append(line)
+            
+            # Add last step
+            if current_step and current_content:
+                steps.append({
+                    "title": current_step,
+                    "content": '\n'.join(current_content).strip()
+                })
+            
+            # Extract practice question
+            practice = ""
+            if "**Practice Question:**" in analysis_text:
+                practice = analysis_text.split("**Practice Question:**")[1].strip()
+            
+            # Generate Socratic questions based on the problem
+            foundation_q = "What information is given in this problem? What are we trying to find?"
+            bridge_q = "Which mathematical concept or formula could help us solve this?"
+            mastery_q = "Can you explain why we need to use these specific steps?"
+            
+            # Try to extract better questions from the analysis
+            try:
+                if len(steps) > 0 and steps[0].get('content'):
+                    content_preview = steps[0]['content'][:100] if len(steps[0]['content']) > 100 else steps[0]['content']
+                    foundation_q = f"Look at this problem. {content_preview}... What do you notice first?"
+                if len(steps) > 1 and steps[1].get('content'):
+                    content_preview = steps[1]['content'][:100] if len(steps[1]['content']) > 100 else steps[1]['content']
+                    bridge_q = f"We know the rules. {content_preview}... How should we apply them?"
+                if len(steps) > 2 and steps[2].get('content'):
+                    content_preview = steps[2]['content'][:100] if len(steps[2]['content']) > 100 else steps[2]['content']
+                    mastery_q = f"Think about the approach: {content_preview}... Why does this make sense?"
+            except Exception as q_error:
+                # Use default questions if extraction fails
+                pass
+            
+            # Success! Record this key as working
+            api_key_rotator.record_success(key_index)
+            
+            # Return structured format for frontend
+            return {
+                "success": True,
+                "subject": subject,
+                "questions": {
+                    "foundation": foundation_q,
+                    "bridge": bridge_q,
+                    "mastery": mastery_q
+                },
+                "solution_steps": steps,
+                "behavioral_tip": "Remember: It's okay to take your time. Learning happens when we think through problems step by step.",
+                "example_approach": analysis_text,
+                "full_analysis": analysis_text,
+                "practice_question": practice
+            }
         
-        image = PIL.Image.open(io.BytesIO(image_bytes))
-        
-        # Convert to RGB if needed (for PNG with palette, etc.)
-        if image.mode in ('RGBA', 'LA', 'P'):
-            rgb_image = PIL.Image.new('RGB', image.size, (255, 255, 255))
-            if image.mode == 'P':
-                image = image.convert('RGBA')
-            rgb_image.paste(image, mask=image.split()[-1] if image.mode in ('RGBA', 'LA') else None)
-            image = rgb_image
-        elif image.mode != 'RGB':
-            image = image.convert('RGB')
-        
-        # Convert to bytes for API
-        img_byte_arr = io.BytesIO()
-        image.save(img_byte_arr, format='JPEG')
-        img_data = img_byte_arr.getvalue()
-        
-        # Create image part for Gemini API
-        image_part = types.Part.from_bytes(
-            data=img_data,
-            mime_type='image/jpeg'
-        )
-        
-        response = client.models.generate_content(
-            model='models/gemini-2.5-flash',
-            contents=[prompt, image_part]
-        )
-        
-        # Parse and structure the response
-        analysis_text = response.text
-        
-        # Extract subject/topic
-        subject = "General Study"
-        if "**Subject & Topic:**" in analysis_text:
-            subject_line = analysis_text.split("**Subject & Topic:**")[1].split("\n")[0].strip()
-            subject = subject_line if subject_line else "General Study"
-        
-        # Extract ALL steps with their titles
-        steps = []
-        lines = analysis_text.split('\n')
-        current_step = None
-        current_content = []
-        
-        for line in lines:
-            # Check if line is a step header
-            if line.strip().startswith('**Step ') and ':' in line:
-                # Save previous step if exists
-                if current_step:
-                    steps.append({
-                        "title": current_step,
-                        "content": '\n'.join(current_content).strip()
-                    })
-                # Start new step
-                current_step = line.strip().replace('**', '').strip()
-                current_content = []
-            elif current_step and line.strip() and not line.strip().startswith('**Practice Question'):
-                # Add content to current step
-                current_content.append(line)
-        
-        # Add last step
-        if current_step and current_content:
-            steps.append({
-                "title": current_step,
-                "content": '\n'.join(current_content).strip()
-            })
-        
-        # Extract practice question
-        practice = ""
-        if "**Practice Question:**" in analysis_text:
-            practice = analysis_text.split("**Practice Question:**")[1].strip()
-        
-        # Generate Socratic questions based on the problem
-        foundation_q = "What information is given in this problem? What are we trying to find?"
-        bridge_q = "Which mathematical concept or formula could help us solve this?"
-        mastery_q = "Can you explain why we need to use these specific steps?"
-        
-        # Try to extract better questions from the analysis
-        try:
-            if len(steps) > 0 and steps[0].get('content'):
-                content_preview = steps[0]['content'][:100] if len(steps[0]['content']) > 100 else steps[0]['content']
-                foundation_q = f"Look at this problem. {content_preview}... What do you notice first?"
-            if len(steps) > 1 and steps[1].get('content'):
-                content_preview = steps[1]['content'][:100] if len(steps[1]['content']) > 100 else steps[1]['content']
-                bridge_q = f"We know the rules. {content_preview}... How should we apply them?"
-            if len(steps) > 2 and steps[2].get('content'):
-                content_preview = steps[2]['content'][:100] if len(steps[2]['content']) > 100 else steps[2]['content']
-                mastery_q = f"Think about the approach: {content_preview}... Why does this make sense?"
-        except Exception as q_error:
-            # Use default questions if extraction fails
-            pass
-        
-        # Return structured format for frontend
-        return {
-            "success": True,
-            "subject": subject,
-            "questions": {
-                "foundation": foundation_q,
-                "bridge": bridge_q,
-                "mastery": mastery_q
-            },
-            "solution_steps": steps,
-            "behavioral_tip": "Remember: It's okay to take your time. Learning happens when we think through problems step by step.",
-            "example_approach": analysis_text,
-            "full_analysis": analysis_text,
-            "practice_question": practice
-        }
-    except Exception as e:
-        import traceback
-        error_details = traceback.format_exc()
-        print(f"ERROR in analyze_homework_with_ai: {str(e)}")
-        print(error_details)
-        return {"success": False, "error": str(e), "details": error_details}
+        except Exception as e:
+            error_msg = str(e).lower()
+            
+            # Check for rate limit errors
+            if "429" in error_msg or "quota" in error_msg or "rate limit" in error_msg or "resource exhausted" in error_msg:
+                print(f"⚠️ API Key {key_index + 1} hit rate limit, marking as exhausted")
+                api_key_rotator.mark_key_exhausted(key_index)
+                last_error = "rate_limit"
+                continue  # Try next key
+            
+            # Check for invalid API key errors
+            elif "invalid" in error_msg or "api key" in error_msg or "authentication" in error_msg or "401" in error_msg or "403" in error_msg:
+                print(f"❌ API Key {key_index + 1} is invalid, skipping")
+                api_key_rotator.mark_key_invalid(key_index)
+                last_error = "invalid_key"
+                continue  # Try next key
+            
+            # Other errors - might be temporary, try next key
+            else:
+                print(f"⚠️ API Key {key_index + 1} error: {str(e)}")
+                last_error = str(e)
+                continue  # Try next key
+    
+    # All keys failed
+    print(f"❌ All API keys failed. Last error type: {last_error}")
+    return {
+        "success": False,
+        "error": "We're experiencing high demand. Please try again in a moment.",
+        "retry_after": "30 seconds"
+    }
 
 @app.get("/session")
 async def create_session(current_user: dict = Depends(get_current_user)):
@@ -1413,13 +1637,10 @@ async def analyze_homework(
         return JSONResponse(status_code=400, content={"error": "Invalid file type"})
     
     contents = await file.read()
-    api_key = os.getenv("GEMINI_API_KEY")
-    
-    if not api_key:
-        return JSONResponse(status_code=500, content={"error": "GEMINI_API_KEY not configured"})
     
     try:
-        result = await analyze_homework_with_ai(contents, api_key)
+        # Smart rotation handles everything - no need to check for keys
+        result = await analyze_homework_with_ai(contents)
         
         if not result.get("success", False):
             return JSONResponse(status_code=500, content={"error": result.get("error", "Analysis failed")})
@@ -1445,14 +1666,8 @@ async def upload_image(
     
     contents = await file.read()
     
-    # Use server API key
-    api_key = os.getenv("GEMINI_API_KEY")
-    
-    if not api_key:
-        return JSONResponse(status_code=500, content={"error": "No API key configured on server"})
-    
-    # Analyze with AI
-    ai_result = await analyze_homework_with_ai(contents, api_key)
+    # Smart rotation handles everything
+    ai_result = await analyze_homework_with_ai(contents)
     
     if ai_result["success"]:
         return {
