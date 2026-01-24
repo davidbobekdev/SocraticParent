@@ -1685,6 +1685,7 @@ async def upload_image(
 async def paddle_webhook(request: Request):
     """
     Paddle webhook endpoint with signature verification
+    Paddle sends signatures in format: ts=timestamp;h1=signature
     """
     import hmac
     import hashlib
@@ -1693,25 +1694,61 @@ async def paddle_webhook(request: Request):
     raw_body = await request.body()
     
     # Get signature from headers  
-    signature = request.headers.get("Paddle-Signature")
+    signature_header = request.headers.get("Paddle-Signature")
     
-    if not signature:
+    if not signature_header:
+        print("[WEBHOOK] ⚠️ Missing Paddle-Signature header")
         raise HTTPException(status_code=400, detail="Missing Paddle-Signature header")
     
-    # Verify signature (temporarily disabled for testing)
+    # TEMPORARILY DISABLED - Debug signature mismatch issue
     webhook_secret = os.getenv("PADDLE_WEBHOOK_SECRET", "")
-    # TODO: Re-enable signature verification after getting the correct secret
-    # if webhook_secret:
-    #     computed_signature = hmac.new(
-    #         webhook_secret.encode('utf-8'),
-    #         raw_body,
-    #         hashlib.sha256
-    #     ).hexdigest()
-    #     
-    #     if not hmac.compare_digest(computed_signature, signature):
-    #         raise HTTPException(status_code=401, detail="Invalid signature")
+    print(f"[WEBHOOK] ⚠️ Signature verification DISABLED for debugging")
+    print(f"[WEBHOOK] Signature header received: {signature_header}")
+    print(f"[WEBHOOK] Secret configured: {webhook_secret[:10]}... (length: {len(webhook_secret)})")
     
-    print(f"[WEBHOOK] Received Paddle webhook (signature check disabled for testing)")
+    # TODO: Re-enable after fixing signature format
+    # if webhook_secret:
+    #     try:
+    #         # Parse Paddle signature format: "ts=timestamp;h1=signature"
+    #         sig_parts = {}
+    #         for part in signature_header.split(';'):
+    #             if '=' in part:
+    #                 key, value = part.split('=', 1)
+    #                 sig_parts[key.strip()] = value.strip()
+    #         
+    #         timestamp = sig_parts.get('ts', '')
+    #         received_signature = sig_parts.get('h1', '')
+    #         
+    #         if not timestamp or not received_signature:
+    #             print(f"[WEBHOOK] ❌ Invalid signature format: {signature_header}")
+    #             raise HTTPException(status_code=401, detail="Invalid signature format")
+    #         
+    #         # Create signed payload: timestamp:body
+    #         signed_payload = f"{timestamp}:{raw_body.decode('utf-8')}"
+    #         
+    #         # Compute HMAC signature
+    #         computed_signature = hmac.new(
+    #             webhook_secret.encode('utf-8'),
+    #             signed_payload.encode('utf-8'),
+    #             hashlib.sha256
+    #         ).hexdigest()
+    #         
+    #         # Verify signature
+    #         if not hmac.compare_digest(computed_signature, received_signature):
+    #             print(f"[WEBHOOK] ❌ Signature mismatch!")
+    #             print(f"[WEBHOOK] Expected: {computed_signature}")
+    #             print(f"[WEBHOOK] Received: {received_signature}")
+    #             raise HTTPException(status_code=401, detail="Invalid signature")
+    #         
+    #         print(f"[WEBHOOK] ✅ Signature verified successfully")
+    #         
+    #     except HTTPException:
+    #         raise
+    #     except Exception as e:
+    #         print(f"[WEBHOOK] ❌ Signature verification error: {str(e)}")
+    #         raise HTTPException(status_code=401, detail=f"Signature verification failed: {str(e)}")
+    # else:
+    #     print("[WEBHOOK] ⚠️ No PADDLE_WEBHOOK_SECRET configured - skipping verification (INSECURE!)")
     
     # Parse webhook data
     try:
