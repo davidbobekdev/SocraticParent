@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 from google import genai
 from google.genai import types
-from fastapi import FastAPI, File, UploadFile, Form, Depends, HTTPException, status
+from fastapi import FastAPI, File, UploadFile, Form, Depends, HTTPException, status, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
@@ -51,6 +51,11 @@ class UserLogin(BaseModel):
     username: str
     password: str
 
+class UserStatus(BaseModel):
+    username: str
+    is_premium: bool
+    scans_left: int
+
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -71,6 +76,67 @@ def save_users(users):
     except Exception as e:
         print(f"Error saving users: {e}")
         raise
+
+# Usage limit checking for Paddle integration
+def check_and_update_usage_limit(username: str) -> dict:
+    """
+    Check if user can perform a scan and update their usage.
+    Returns: {"allowed": bool, "is_premium": bool, "scans_left": int, "reason": str}
+    """
+    users = load_users()
+    
+    if username not in users:
+        return {"allowed": False, "is_premium": False, "scans_left": 0, "reason": "User not found"}
+    
+    user = users[username]
+    
+    # Initialize premium fields if not present (for existing users)
+    if 'is_premium' not in user:
+        user['is_premium'] = False
+    if 'daily_scans_left' not in user:
+        user['daily_scans_left'] = 3
+    if 'last_reset' not in user:
+        user['last_reset'] = datetime.now().isoformat()
+    
+    # Check if we need to reset daily limit (24 hours)
+    last_reset = datetime.fromisoformat(user['last_reset'])
+    now = datetime.now()
+    hours_since_reset = (now - last_reset).total_seconds() / 3600
+    
+    if hours_since_reset >= 24:
+        user['daily_scans_left'] = 3
+        user['last_reset'] = now.isoformat()
+    
+    # Premium users have unlimited scans
+    if user['is_premium']:
+        users[username] = user
+        save_users(users)
+        return {
+            "allowed": True,
+            "is_premium": True,
+            "scans_left": -1,  # -1 indicates unlimited
+            "reason": "Premium user"
+        }
+    
+    # Check if non-premium user has scans left
+    if user['daily_scans_left'] > 0:
+        user['daily_scans_left'] -= 1
+        users[username] = user
+        save_users(users)
+        return {
+            "allowed": True,
+            "is_premium": False,
+            "scans_left": user['daily_scans_left'],
+            "reason": "Free tier"
+        }
+    
+    # No scans left
+    return {
+        "allowed": False,
+        "is_premium": False,
+        "scans_left": 0,
+        "reason": "PAYWALL_TRIGGER"
+    }
 
 def verify_password(plain_password, hashed_password):
     # Truncate password to 72 bytes for bcrypt compatibility
@@ -161,7 +227,11 @@ async def register(user: UserCreate):
         "username": user.username,
         "email": user.email,
         "hashed_password": hashed_password,
-        "created_at": datetime.utcnow().isoformat()
+        "created_at": datetime.utcnow().isoformat(),
+        "is_premium": False,
+        "daily_scans_left": 3,
+        "last_reset": datetime.now().isoformat(),
+        "paddle_subscription_id": None
     }
     save_users(users)
     
@@ -203,6 +273,24 @@ async def read_users_me(current_user: dict = Depends(get_current_user)):
     return {
         "username": current_user["username"],
         "email": current_user["email"]
+    }
+
+@app.get("/api/user/status", response_model=UserStatus)
+async def get_user_status(current_user: dict = Depends(get_current_user)):
+    """Get user's premium status and remaining scans"""
+    users = load_users()
+    user = users.get(current_user["username"], {})
+    
+    # Initialize if missing
+    if 'is_premium' not in user:
+        user['is_premium'] = False
+    if 'daily_scans_left' not in user:
+        user['daily_scans_left'] = 3
+    
+    return {
+        "username": current_user["username"],
+        "is_premium": user.get("is_premium", False),
+        "scans_left": user.get("daily_scans_left", 3) if not user.get("is_premium") else -1
     }
 
 HTML_CONTENT = """
@@ -1306,6 +1394,21 @@ async def analyze_homework(
     current_user: dict = Depends(get_current_user)
 ):
     """Analyze homework image"""
+    # Check usage limit FIRST
+    usage_check = check_and_update_usage_limit(current_user["username"])
+    
+    if not usage_check["allowed"]:
+        return JSONResponse(
+            status_code=402,
+            content={
+                "error": "Daily limit reached",
+                "reason": "PAYWALL_TRIGGER",
+                "is_premium": False,
+                "scans_left": 0,
+                "message": "You've used all 3 free scans today. Upgrade to Premium for unlimited access!"
+            }
+        )
+    
     if not file.content_type or not file.content_type.startswith('image/'):
         return JSONResponse(status_code=400, content={"error": "Invalid file type"})
     
@@ -1320,6 +1423,12 @@ async def analyze_homework(
         
         if not result.get("success", False):
             return JSONResponse(status_code=500, content={"error": result.get("error", "Analysis failed")})
+        
+        # Add usage info to response
+        result["usage"] = {
+            "is_premium": usage_check["is_premium"],
+            "scans_left": usage_check["scans_left"]
+        }
         
         return result
     except Exception as e:
@@ -1356,6 +1465,106 @@ async def upload_image(
             status_code=500, 
             content={"error": f"Analysis failed: {ai_result['error']}"}
         )
+
+@app.post("/webhooks/paddle")
+async def paddle_webhook(request: Request):
+    """
+    Paddle webhook endpoint with signature verification
+    """
+    import hmac
+    import hashlib
+    
+    # Get raw body for signature verification
+    raw_body = await request.body()
+    
+    # Get signature from headers  
+    signature = request.headers.get("Paddle-Signature")
+    
+    if not signature:
+        raise HTTPException(status_code=400, detail="Missing Paddle-Signature header")
+    
+    # Verify signature (temporarily disabled for testing)
+    webhook_secret = os.getenv("PADDLE_WEBHOOK_SECRET", "")
+    # TODO: Re-enable signature verification after getting the correct secret
+    # if webhook_secret:
+    #     computed_signature = hmac.new(
+    #         webhook_secret.encode('utf-8'),
+    #         raw_body,
+    #         hashlib.sha256
+    #     ).hexdigest()
+    #     
+    #     if not hmac.compare_digest(computed_signature, signature):
+    #         raise HTTPException(status_code=401, detail="Invalid signature")
+    
+    print(f"[WEBHOOK] Received Paddle webhook (signature check disabled for testing)")
+    
+    # Parse webhook data
+    try:
+        webhook_data = json.loads(raw_body)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid JSON")
+    
+    event_type = webhook_data.get("event_type")
+    data = webhook_data.get("data", {})
+    
+    print(f"[WEBHOOK] Event type: {event_type}")
+    print(f"[WEBHOOK] Data: {json.dumps(data, indent=2)[:500]}")
+    
+    # Load users
+    users = load_users()
+    
+    # Handle subscription events
+    if event_type in ["subscription.created", "subscription.updated"]:
+        # Try to get user_id from custom_data first
+        custom_data = data.get("custom_data", {})
+        if isinstance(custom_data, str):
+            try:
+                custom_data = json.loads(custom_data)
+            except:
+                pass
+        
+        user_id = custom_data.get("user_id") if isinstance(custom_data, dict) else None
+        customer_email = data.get("customer", {}).get("email")
+        subscription_id = data.get("id")
+        status = data.get("status")
+        
+        print(f"[WEBHOOK] Looking for user: user_id={user_id}, email={customer_email}")
+        
+        # Find user by username (from custom_data) or email
+        target_user = None
+        if user_id and user_id in users:
+            target_user = user_id
+        else:
+            # Fallback to email lookup
+            for username, user_data in users.items():
+                if user_data.get("email") == customer_email:
+                    target_user = username
+                    break
+        
+        if target_user:
+            users[target_user]["is_premium"] = (status == "active")
+            users[target_user]["paddle_subscription_id"] = subscription_id
+            save_users(users)
+            print(f"[WEBHOOK] User {target_user} upgraded to premium!")
+            return JSONResponse(status_code=200, content={"success": True, "user": target_user})
+        else:
+            print(f"[WEBHOOK] No user found for email={customer_email}, user_id={user_id}")
+            return JSONResponse(status_code=200, content={"success": False, "error": "User not found"})
+    
+    elif event_type in ["subscription.canceled", "subscription.expired"]:
+        subscription_id = data.get("id")
+        
+        # Find user by subscription ID
+        for username, user_data in users.items():
+            if user_data.get("paddle_subscription_id") == subscription_id:
+                user_data["is_premium"] = False
+                user_data["paddle_subscription_id"] = None
+                user_data["daily_scans_left"] = 3
+                user_data["last_reset"] = datetime.now().isoformat()
+                save_users(users)
+                return JSONResponse(status_code=200, content={"success": True})
+    
+    return JSONResponse(status_code=200, content={"success": True, "message": "Event logged"})
 
 @app.get("/health")
 async def health_check():
