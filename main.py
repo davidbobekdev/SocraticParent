@@ -456,6 +456,15 @@ async def get_user_status(current_user: dict = Depends(get_current_user)):
         "scans_left": user.get("daily_scans_left", 3) if not user.get("is_premium") else -1
     }
 
+@app.get("/api/paddle/client-token")
+async def get_paddle_config(current_user: dict = Depends(get_current_user)):
+    """Get Paddle configuration for frontend checkout"""
+    return {
+        "client_token": os.getenv("PADDLE_CLIENT_TOKEN", ""),
+        "price_id": os.getenv("PADDLE_PRICE_ID", ""),
+        "user_id": current_user["username"]
+    }
+
 @app.post("/api/admin/upgrade-test")
 async def admin_upgrade_test(username: str, admin_secret: str):
     """Admin endpoint for testing premium upgrades - REMOVE IN PRODUCTION"""
@@ -1766,7 +1775,7 @@ async def paddle_webhook(request: Request):
     users = load_users()
     
     # Handle subscription events
-    if event_type in ["subscription.created", "subscription.updated"]:
+    if event_type in ["subscription.created", "subscription.updated", "subscription.activated"]:
         # Try to get user_id from custom_data first
         custom_data = data.get("custom_data", {})
         if isinstance(custom_data, str):
@@ -1797,7 +1806,7 @@ async def paddle_webhook(request: Request):
             users[target_user]["is_premium"] = (status == "active")
             users[target_user]["paddle_subscription_id"] = subscription_id
             save_users(users)
-            print(f"[WEBHOOK] User {target_user} upgraded to premium!")
+            print(f"[WEBHOOK] User {target_user} upgraded to premium! (status={status})")
             return JSONResponse(status_code=200, content={"success": True, "user": target_user})
         else:
             print(f"[WEBHOOK] No user found for email={customer_email}, user_id={user_id}")

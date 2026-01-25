@@ -117,9 +117,137 @@ async function initializeSession() {
         const data = await response.json();
         sessionId = data.session_id;
         console.log('Session initialized:', sessionId);
+        
+        // Fetch user status for premium/usage info
+        await fetchUserStatus();
     } catch (error) {
         console.warn('Failed to initialize session:', error);
         // Continue anyway - backend will create one on first analyze
+    }
+}
+
+// ===== Premium & Payment Functions =====
+async function fetchUserStatus() {
+    try {
+        const token = getToken();
+        const response = await fetch('/api/user/status', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('User status fetched:', data);
+            updateUsageDisplay(data);
+            return data;
+        } else {
+            console.error('Failed to fetch user status:', response.status);
+        }
+    } catch (error) {
+        console.error('Failed to fetch user status:', error);
+    }
+}
+
+function updateUsageDisplay(data) {
+    const usageInfo = elements.usageInfo;
+    const upgradeBtn = elements.upgradeBtn;
+    
+    console.log('Updating usage display with:', data);
+    
+    if (data.is_premium) {
+        usageInfo.textContent = '∞ Unlimited';
+        usageInfo.classList.add('unlimited');
+        // Hide upgrade button for premium users
+        if (upgradeBtn) {
+            upgradeBtn.classList.remove('show');
+        }
+        console.log('User is premium - showing unlimited, hiding upgrade button');
+    } else {
+        // Backend returns 'scans_left', not 'daily_scans_left'
+        const scansLeft = data.scans_left !== undefined ? data.scans_left : (data.daily_scans_left || 0);
+        usageInfo.textContent = `${scansLeft} scan${scansLeft !== 1 ? 's' : ''} left`;
+        usageInfo.classList.remove('unlimited');
+        // Always show upgrade button for non-premium users
+        if (upgradeBtn) {
+            upgradeBtn.classList.add('show');
+        }
+        console.log('User is free tier - scans left:', scansLeft);
+    }
+}
+
+async function handlePaymentSuccess() {
+    console.log('Payment successful! Processing immediately...');
+    // Wait just 500ms for webhook to process
+    await new Promise(resolve => setTimeout(resolve, 500));
+    console.log('Fetching updated user status...');
+    const status = await fetchUserStatus();
+    
+    // Show thank you message
+    alert('🎉 Thank you for joining!\n\nYou can now enjoy unlimited usage of this tool.');
+    
+    console.log('Performing hard reload...');
+    // Force hard reload to clear all caches
+    window.location.href = window.location.href.split('?')[0] + '?t=' + Date.now();
+}
+
+async function openPaddleCheckout() {
+    try {
+        if (typeof Paddle === 'undefined') {
+            alert('Payment system not loaded. Please refresh the page.');
+            return;
+        }
+        
+        // Get Paddle config from backend
+        const token = getToken();
+        const response = await fetch('/api/paddle/client-token', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to get payment configuration');
+        }
+        
+        const config = await response.json();
+        
+        // Initialize Paddle with sandbox environment
+        Paddle.Environment.set('sandbox');
+        Paddle.Initialize({ 
+            token: config.client_token,
+            eventCallback: function(data) {
+                console.log('Paddle event:', data);
+                
+                // Handle checkout completion
+                if (data.name === 'checkout.completed') {
+                    console.log('Payment completed! Processing...');
+                    handlePaymentSuccess();
+                }
+            }
+        });
+        
+        // Open checkout
+        Paddle.Checkout.open({
+            items: [{ priceId: config.price_id, quantity: 1 }],
+            customer: { email: `${config.user_id}@placeholder.email` },
+            customData: { user_id: config.user_id }
+        });
+        
+    } catch (error) {
+        console.error('Payment error:', error);
+        alert('Unable to open checkout. Please try again or contact support.');
+    }
+}
+
+function showPaywall(paywallData) {
+    // Display the results section with blurred content
+    showSection('results');
+    
+    // Show paywall overlay if it exists
+    if (elements.paywallOverlay) {
+        elements.paywallOverlay.classList.remove('hidden');
+    }
+    
+    // Update usage display
+    if (paywallData.usage) {
+        updateUsageDisplay(paywallData.usage);
     }
 }
 
@@ -135,6 +263,12 @@ const elements = {
     removeBtn: document.getElementById('removeBtn'),
     analyzeBtn: document.getElementById('analyzeBtn'),
     gradeSelect: document.getElementById('gradeSelect'),
+    
+    // Premium elements
+    upgradeBtn: document.getElementById('upgradeBtn'),
+    usageInfo: document.getElementById('usageInfo'),
+    paywallOverlay: document.getElementById('paywallOverlay'),
+    paywallUpgradeBtn: document.getElementById('paywallUpgradeBtn'),
     
     // Camera
     cameraBtn: document.getElementById('cameraBtn'),
@@ -364,12 +498,25 @@ async function analyzeHomework() {
             throw new Error('Cannot connect to server. Please ensure the application is running.');
         });
         
+        // Handle paywall (402 Payment Required)
+        if (response.status === 402) {
+            const paywallData = await response.json().catch(() => ({}));
+            showPaywall(paywallData);
+            return;
+        }
+        
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.detail || `Server error: ${response.status}`);
         }
         
         const result = await response.json();
+        
+        // Update usage display if usage info is included
+        if (result.usage) {
+            updateUsageDisplay(result.usage);
+        }
+        
         displayResults(result);
         
     } catch (error) {
@@ -658,3 +805,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         initializeSession();
     }
 });
+
+// ===== Premium Button Event Listeners =====
+if (elements.upgradeBtn) {
+    elements.upgradeBtn.addEventListener('click', openPaddleCheckout);
+}
+
+if (elements.paywallUpgradeBtn) {
+    elements.paywallUpgradeBtn.addEventListener('click', openPaddleCheckout);
+}

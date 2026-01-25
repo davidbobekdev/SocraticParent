@@ -111,37 +111,13 @@ The entire application is contained in `main.py` (1000+ lines) with embedded HTM
 
 ### File Structure
 ```
-├── main.py                     # FastAPI backend (1700+ lines)
-├── requirements.txt            # Python dependencies
-├── start.sh                    # Application startup script
-├── users.json                  # User data storage (gitignored)
-├── .env.example                # Environment variables template
-├── static/                     # Frontend assets
-│   ├── index.html              # Main application UI
-│   ├── app.js                  # Frontend JavaScript
-│   ├── styles.css              # Application styles
-│   ├── login.html              # Authentication page
-│   └── login.js                # Login logic
-├── docs/                       # Documentation
-│   ├── PROJECT_OVERVIEW.md     # High-level project info
-│   ├── SYSTEM_LOGIC.md         # Architecture details
-│   ├── TECHNICAL_SPEC.md       # Technical specifications
-│   ├── UI_UX_GUIDELINES.md     # Design guidelines
-│   ├── paddle/                 # Payment integration docs
-│   │   ├── PADDLE_CONFIG.md
-│   │   ├── PADDLE_IMPLEMENTATION.md
-│   │   └── PAYMENT_TESTING.md
-│   └── deployment/             # Deployment guides
-│       ├── DEPLOYMENT.md
-│       ├── RAILWAY_VOLUME_SETUP.md
-│       └── deploy-railway.sh
-├── tests/                      # Test suite (being rewritten)
-│   └── README.md               # Test structure documentation
-├── .github/                    # GitHub configuration
-├── Dockerfile                  # Container configuration
-├── docker-compose.yml          # Service orchestration
-├── railway.json                # Railway deployment config
-└── fly.toml                    # Fly.io configuration
+├── main.py              # Complete application (1000+ lines, FastAPI + embedded frontend)
+├── Dockerfile           # Container configuration (Python 3.12-slim)
+├── docker-compose.yml   # Service orchestration
+├── requirements.txt     # Python dependencies
+├── railway.json         # Railway deployment config
+├── deploy-railway.sh    # Automated deployment script
+└── docs/               # Project documentation
 ```
 
 ## 📋 API Endpoints

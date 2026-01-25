@@ -8,10 +8,13 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="description" content="The Anti-Homework-Solver: Transform homework into meaningful learning moments">
     <title>Socratic Parent - Pedagogical Firewall</title>
-    <link rel="stylesheet" href="/static/styles.css?v=7">
+    <link rel="stylesheet" href="/static/styles.css?v=17">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    
+    <!-- Paddle.js Billing v2 -->
+    <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
 </head>
 <body>
     <div class="container">
@@ -25,6 +28,8 @@
             </div>
             <div class="header-right">
                 <span id="userInfo" class="user-info"></span>
+                <span id="usageInfo" class="usage-info">Loading...</span>
+                <button id="upgradeBtn" class="btn-upgrade" style="display:none;">⭐ Upgrade to Premium</button>
                 <button onclick="logout()" class="logout-btn">Logout</button>
             </div>
             <p class="tagline">The Anti-Homework-Solver for the 2026 AI-Saturated Era</p>
@@ -152,6 +157,24 @@
                         </div>
                         <p id="behavioralTip" class="tip-text"></p>
                     </div>
+                    <!-- Paywall Overlay -->
+                    <div id="paywallOverlay" class="paywall-overlay hidden">
+                        <div class="paywall-content">
+                            <h2>🔒 Unlock Full Solution</h2>
+                            <p>You've used all 3 free scans today!</p>
+                            <p class="paywall-subtitle">Get unlimited access with Premium</p>
+                            <ul class="paywall-features">
+                                <li>✨ Unlimited homework scans</li>
+                                <li>📚 Full step-by-step solutions</li>
+                                <li>💡 Teacher tips & guidance</li>
+                                <li>🎯 Priority support</li>
+                            </ul>
+                            <button id="paywallUpgradeBtn" class="btn-upgrade-large">
+                                ⭐ Upgrade to Premium - $9.99/month
+                            </button>
+                            <p class="paywall-note">Cancel anytime. No long-term commitment.</p>
+                        </div>
+                    </div>
 
                     <!-- Action Buttons -->
                     <div class="action-buttons">
@@ -249,6 +272,6 @@
         </div>
     </div>
 
-    <script src="/static/app.js?v=7"></script>
+    <script src="/static/app.js?v=17"></script>
 </body>
 </html>
