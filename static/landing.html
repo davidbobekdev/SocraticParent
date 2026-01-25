@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Socratic Parent - Transform Homework Into Learning</title>
+    
+    <!-- KaTeX for Math Rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -351,6 +357,7 @@
             <div class="logo-icon">🎓</div>
             <h1>Socratic Parent</h1>
             <p class="tagline">The Anti-Homework-Solver</p>
+            
             <p class="subtitle">
                 Transform homework from conflict into connection. Help your child learn,
                 not just get answers. Built for the 2026 AI-saturated era.
@@ -362,6 +369,14 @@
                 <a href="#how-it-works" class="btn btn-secondary">
                     See How It Works
                 </a>
+            </div>
+            
+            <!-- Inspirational Quote -->
+            <div style="background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.12) 100%); backdrop-filter: blur(20px); border: 2px solid rgba(255,255,255,0.45); border-radius: 18px; padding: 20px 28px; margin: 35px auto 0; max-width: 600px; box-shadow: 0 8px 32px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.35);">
+                <blockquote style="font-size: 1.15em; font-weight: 600; color: white; line-height: 1.4; font-style: italic; margin: 0 0 12px 0; text-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                    "The quality of your questions determines the quality of your understanding."
+                </blockquote>
+                <p style="font-style: normal; font-size: 0.8em; margin: 0; color: rgba(255,255,255,0.9); font-weight: 500; text-align: right; letter-spacing: 0.3px;">— The Socratic Method</p>
             </div>
         </div>
     </section>
@@ -459,6 +474,142 @@
         </div>
     </section>
 
+    <!-- Interactive Demo Section -->
+    <section style="padding: 80px 20px; background: white;">
+        <div class="container">
+            <h2 class="section-title">See It In Action</h2>
+            <p class="section-subtitle">
+                Watch how Socratic questions guide your child to discover the solution themselves
+            </p>
+            
+            <div style="max-width: 900px; margin: 0 auto;">
+                <div style="background: white; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); padding: 40px;">
+                    <!-- Demo Content -->
+                    <div class="demo-content active" data-step="0">
+                        <div style="text-align: center; padding: 40px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; color: white;">
+                            <div style="font-size: 4em; margin-bottom: 20px;">📸</div>
+                            <h3 style="font-size: 1.5em; margin-bottom: 15px;">Upload Problem</h3>
+                            <div style="font-size: 1.8em; font-family: 'Courier New', monospace; margin-top: 20px;">
+                                $$2^2(x+3)+9-5=32$$
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="demo-content" data-step="1" style="display: none;">
+                        <div style="background: linear-gradient(to right, #fffbeb 0%, #fef3c7 100%); border: 3px solid #fbbf24; border-radius: 16px; padding: 30px;">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+                                <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2em; flex-shrink: 0;">🏗️</div>
+                                <div>
+                                    <div style="display: inline-block; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: white; padding: 6px 16px; border-radius: 20px; font-weight: 600; font-size: 0.85em; margin-bottom: 8px;">Foundation Question</div>
+                                    <h3 style="margin: 0; color: #92400e; font-size: 1.4em;">Understanding the Problem</h3>
+                                </div>
+                            </div>
+                            <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; font-size: 1.5em;">
+                                $$2^2(x+3)+9-5=32$$
+                            </div>
+                            <div style="background: white; border-left: 4px solid #f59e0b; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                                <strong style="color: #92400e;">🎯 Ask Your Child:</strong>
+                                <p style="margin-top: 10px; color: #78350f;">"Before we solve anything, can you explain in your own words what this equation is asking us to find? What does it mean when we say 'solve for x'?"</p>
+                            </div>
+                            <p style="color: #78350f; font-weight: 500;">💡 This question helps your child understand the <em>goal</em> before rushing to calculate.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="demo-content" data-step="2" style="display: none;">
+                        <div style="background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border: 3px solid #fb923c; border-radius: 16px; padding: 30px;">
+                            <div style="text-align: center; margin-bottom: 20px;">
+                                <div style="width: 70px; height: 70px; background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 2.5em; margin-bottom: 15px;">⛰️</div>
+                                <div style="display: inline-block; background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%); color: white; padding: 6px 16px; border-radius: 20px; font-weight: 600; font-size: 0.85em; margin-bottom: 8px;">Climb Question</div>
+                                <h3 style="margin: 5px 0 0 0; color: #7c2d12; font-size: 1.4em;">Identifying the Strategy</h3>
+                            </div>
+                            <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(251,146,60,0.15); margin-bottom: 20px; font-size: 1.5em;">
+                                $$2^2(x+3)+9-5=32$$
+                            </div>
+                            <div style="background: rgba(255,255,255,0.9); border: 2px solid #fb923c; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                                <strong style="color: #7c2d12;">🎯 Ask Your Child:</strong>
+                                <p style="margin-top: 10px; color: #7c2d12;">"Look at all the operations in this equation. Which ones need to happen first according to PEMDAS? Can you identify what's 'wrapping around' the x that we'll need to unwrap?"</p>
+                            </div>
+                            <p style="color: #7c2d12; font-weight: 500; text-align: center;">🧭 This question guides your child to think strategically.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="demo-content" data-step="3" style="display: none;">
+                        <div style="background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%); border: 3px solid #f97316; border-radius: 16px; padding: 30px; position: relative; overflow: hidden;">
+                            <div style="position: absolute; top: 10px; right: 10px; font-size: 4em; opacity: 0.1;">🏆</div>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                                <div style="flex: 1;">
+                                    <div style="display: inline-block; background: linear-gradient(135deg, #f97316 0%, #c2410c 100%); color: white; padding: 6px 16px; border-radius: 20px; font-weight: 600; font-size: 0.85em; margin-bottom: 8px;">Summit Question</div>
+                                    <h3 style="margin: 10px 0 0 0; color: #7c2d12; font-size: 1.4em;">Verifying Understanding</h3>
+                                </div>
+                                <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #f97316 0%, #c2410c 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2em; box-shadow: 0 4px 12px rgba(249,115,22,0.3);">🎯</div>
+                            </div>
+                            <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 16px rgba(249,115,22,0.2); border: 2px solid #fdba74; margin-bottom: 20px; font-size: 1.5em;">
+                                $$2^2(x+3)+9-5=32$$
+                            </div>
+                            <div style="background: white; border: 3px solid #f97316; border-radius: 12px; box-shadow: 0 2px 8px rgba(249,115,22,0.15); padding: 20px; margin-bottom: 20px;">
+                                <strong style="color: #7c2d12; font-size: 1.1em;">🎯 Ask Your Child:</strong>
+                                <p style="margin-top: 10px; color: #7c2d12;">"Once we find a value for x, how will we know if it's correct? What does it mean for a number to 'solve' an equation?"</p>
+                            </div>
+                            <p style="color: #7c2d12; font-weight: 600; padding: 15px; background: rgba(255,255,255,0.7); border-radius: 8px;">✨ This question teaches verification and critical thinking.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="demo-content" data-step="4" style="display: none;">
+                        <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px; padding: 30px;">
+                            <h3 style="color: #1e293b; font-size: 1.5em; margin-bottom: 20px; text-align: center;">Complete Solution</h3>
+                            <div style="display: grid; gap: 20px;">
+                                <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #667eea;">
+                                    <strong style="color: #667eea;">Step 1: Simplify Exponents</strong>
+                                    <div style="margin-top: 10px; font-size: 1.3em;">$$2^2 = 4$$</div>
+                                    <div style="margin-top: 10px; font-size: 1.3em;">$$4(x+3)+9-5=32$$</div>
+                                </div>
+                                <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #667eea;">
+                                    <strong style="color: #667eea;">Step 2: Simplify Constants</strong>
+                                    <div style="margin-top: 10px; font-size: 1.3em;">$$9-5=4$$</div>
+                                    <div style="margin-top: 10px; font-size: 1.3em;">$$4(x+3)+4=32$$</div>
+                                </div>
+                                <div style="background: white; padding: 20px; border-radius: 12px; border-left: 4px solid #667eea;">
+                                    <strong style="color: #667eea;">Step 3: Isolate Variable</strong>
+                                    <div style="margin-top: 10px; font-size: 1.3em;">$$4(x+3)=28$$</div>
+                                    <div style="margin-top: 10px; font-size: 1.3em;">$$x+3=7$$</div>
+                                    <div style="margin-top: 10px; font-size: 1.3em;">$$x=4$$</div>
+                                </div>
+                                <div style="background: #d1fae5; padding: 20px; border-radius: 12px; border-left: 4px solid #10b981;">
+                                    <strong style="color: #065f46;">✓ Verify: x = 4</strong>
+                                    <div style="margin-top: 10px; font-size: 1.3em; color: #065f46;">$$2^2(4+3)+9-5=32 \checkmark$$</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Navigation Buttons - Below Content -->
+                    <div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 30px; flex-wrap: wrap;">
+                        <button class="demo-nav-btn active" data-step="0" style="width: 70px; height: 70px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 50%; cursor: pointer; font-weight: 600; font-size: 0.75em; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); transition: all 0.3s ease;">
+                            <span style="font-size: 1.5em; margin-bottom: 2px;">↑</span>
+                            <span>Upload</span>
+                        </button>
+                        <button class="demo-nav-btn" data-step="1" style="width: 70px; height: 70px; background: #f1f5f9; color: #64748b; border: 2px solid #e2e8f0; border-radius: 50%; cursor: pointer; font-weight: 600; font-size: 0.7em; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.3s ease;">
+                            <span style="font-size: 1.5em; margin-bottom: 2px;">Q1</span>
+                            <span>Found.</span>
+                        </button>
+                        <button class="demo-nav-btn" data-step="2" style="width: 70px; height: 70px; background: #f1f5f9; color: #64748b; border: 2px solid #e2e8f0; border-radius: 50%; cursor: pointer; font-weight: 600; font-size: 0.7em; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.3s ease;">
+                            <span style="font-size: 1.5em; margin-bottom: 2px;">Q2</span>
+                            <span>Climb</span>
+                        </button>
+                        <button class="demo-nav-btn" data-step="3" style="width: 70px; height: 70px; background: #f1f5f9; color: #64748b; border: 2px solid #e2e8f0; border-radius: 50%; cursor: pointer; font-weight: 600; font-size: 0.7em; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.3s ease;">
+                            <span style="font-size: 1.5em; margin-bottom: 2px;">Q3</span>
+                            <span>Summit</span>
+                        </button>
+                        <button class="demo-nav-btn" data-step="4" style="width: 70px; height: 70px; background: #f1f5f9; color: #64748b; border: 2px solid #e2e8f0; border-radius: 50%; cursor: pointer; font-weight: 600; font-size: 0.7em; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.3s ease;">
+                            <span style="font-size: 1.5em; margin-bottom: 2px;">1→6</span>
+                            <span>Steps</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Social Proof -->
     <section class="social-proof">
         <div class="container">
@@ -498,5 +649,79 @@
             </p>
         </div>
     </section>
+    
+    <!-- Footer -->
+    <footer style="background: #1e293b; padding: 40px 20px; text-align: center; color: rgba(255,255,255,0.8);">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 20px; margin-bottom: 20px;">
+                <a href="/static/faq.html" style="color: rgba(255,255,255,0.9); text-decoration: none; font-weight: 500; transition: color 0.2s;">FAQ</a>
+                <span style="color: rgba(255,255,255,0.3);">•</span>
+                <a href="/static/contact.html" style="color: rgba(255,255,255,0.9); text-decoration: none; font-weight: 500; transition: color 0.2s;">Contact</a>
+                <span style="color: rgba(255,255,255,0.3);">•</span>
+                <a href="/static/terms.html" style="color: rgba(255,255,255,0.9); text-decoration: none; font-weight: 500; transition: color 0.2s;">Terms</a>
+                <span style="color: rgba(255,255,255,0.3);">•</span>
+                <a href="/static/privacy.html" style="color: rgba(255,255,255,0.9); text-decoration: none; font-weight: 500; transition: color 0.2s;">Privacy</a>
+            </div>
+            <p style="font-size: 0.9em; color: rgba(255,255,255,0.6);">© 2026 Socratic Parent. All rights reserved.</p>
+        </div>
+    </footer>
+    
+    <script>
+        // Demo navigation
+        const demoButtons = document.querySelectorAll('.demo-nav-btn');
+        const demoContents = document.querySelectorAll('.demo-content');
+        
+        demoButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const step = btn.getAttribute('data-step');
+                
+                // Update buttons
+                demoButtons.forEach(b => {
+                    b.style.background = '#f1f5f9';
+                    b.style.color = '#64748b';
+                    b.style.border = '2px solid #e2e8f0';
+                    b.style.boxShadow = 'none';
+                    b.classList.remove('active');
+                });
+                btn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                btn.style.color = 'white';
+                btn.style.border = 'none';
+                btn.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.3)';
+                btn.classList.add('active');
+                
+                // Update content
+                demoContents.forEach(content => {
+                    content.style.display = 'none';
+                });
+                document.querySelector(`.demo-content[data-step="${step}"]`).style.display = 'block';
+                
+                // Render math
+                if (window.renderMathInElement) {
+                    renderMathInElement(document.body, {
+                        delimiters: [
+                            {left: '$$', right: '$$', display: true},
+                            {left: '$', right: '$', display: false}
+                        ],
+                        throwOnError: false
+                    });
+                }
+            });
+        });
+        
+        // Initial math render when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                if (window.renderMathInElement) {
+                    renderMathInElement(document.body, {
+                        delimiters: [
+                            {left: '$$', right: '$$', display: true},
+                            {left: '$', right: '$', display: false}
+                        ],
+                        throwOnError: false
+                    });
+                }
+            }, 500);
+        });
+    </script>
 </body>
 </html>

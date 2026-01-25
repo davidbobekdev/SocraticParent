@@ -190,9 +190,12 @@ async function handlePaymentSuccess() {
 }
 
 async function openPaddleCheckout() {
+    trackEvent('upgrade_clicked');
+    
     try {
         if (typeof Paddle === 'undefined') {
             alert('Payment system not loaded. Please refresh the page.');
+            trackEvent('payment_error', { error: 'paddle_not_loaded' });
             return;
         }
         
@@ -208,6 +211,8 @@ async function openPaddleCheckout() {
         
         const config = await response.json();
         
+        trackEvent('checkout_opened');
+        
         // Initialize Paddle with sandbox environment
         Paddle.Environment.set('sandbox');
         Paddle.Initialize({ 
@@ -218,6 +223,7 @@ async function openPaddleCheckout() {
                 // Handle checkout completion
                 if (data.name === 'checkout.completed') {
                     console.log('Payment completed! Processing...');
+                    trackEvent('payment_completed');
                     handlePaymentSuccess();
                 }
             }
@@ -232,6 +238,7 @@ async function openPaddleCheckout() {
         
     } catch (error) {
         console.error('Payment error:', error);
+        trackEvent('payment_error', { error: error.message });
         alert('Unable to open checkout. Please try again or contact support.');
     }
 }
@@ -367,6 +374,7 @@ elements.fileInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {
         handleFileSelect(file);
+        trackEvent('file_selected', { fileSize: file.size, fileType: file.type });
         // Clear input to allow re-selecting same file next time
         setTimeout(() => {
             e.target.value = '';
@@ -466,6 +474,11 @@ async function analyzeHomework() {
         return;
     }
     
+    trackEvent('analyze_started', { 
+        grade: elements.gradeSelect.value,
+        fileSize: selectedFile.size 
+    });
+    
     // Show loading state
     showSection('loading');
     
@@ -517,11 +530,21 @@ async function analyzeHomework() {
             updateUsageDisplay(result.usage);
         }
         
+        trackEvent('analyze_success', { 
+            subject: result.subject,
+            isPremium: result.usage?.is_premium || false
+        });
+        
         displayResults(result);
         
     } catch (error) {
         console.error('Analysis error:', error);
         const errorMsg = error.message || 'Connection failed. Please check if the server is running.';
+        
+        trackEvent('analyze_error', { 
+            error: errorMsg,
+            errorType: error.name || 'UnknownError'
+        });
         
         // Add helpful context for specific errors
         let helpText = '';
@@ -735,15 +758,61 @@ elements.showExampleBtn.addEventListener('click', (e) => {
 });
 
 // ===== Error Handling =====
-function showError(message) {
-    elements.errorMessage.textContent = message;
+function showError(message, options = {}) {
+    const { showRetry = true, retryAction = null } = options;
     
-    // Add retry information
-    const retryNote = document.createElement('p');
-    retryNote.style.marginTop = '1rem';
-    retryNote.style.fontSize = '0.9rem';
-    retryNote.textContent = '💡 Tip: If this keeps happening, try a clearer photo or a different angle.';
-    elements.errorMessage.appendChild(retryNote);
+    // Clear previous error content
+    elements.errorMessage.innerHTML = '';
+    
+    // Create error icon
+    const errorIcon = document.createElement('div');
+    errorIcon.style.fontSize = '3rem';
+    errorIcon.style.marginBottom = '1rem';
+    errorIcon.textContent = '⚠️';
+    elements.errorMessage.appendChild(errorIcon);
+    
+    // Main error message
+    const errorText = document.createElement('p');
+    errorText.style.fontSize = '1.1rem';
+    errorText.style.fontWeight = '600';
+    errorText.style.marginBottom = '1rem';
+    errorText.textContent = message;
+    elements.errorMessage.appendChild(errorText);
+    
+    // Add contextual help based on error type
+    if (message.includes('network') || message.includes('connect') || message.includes('fetch')) {
+        const helpText = document.createElement('p');
+        helpText.style.fontSize = '0.95rem';
+        helpText.style.color = '#6B7280';
+        helpText.innerHTML = '💡 <strong>Check your internet connection</strong> and try again.';
+        elements.errorMessage.appendChild(helpText);
+    } else if (message.includes('limit') || message.includes('quota')) {
+        const helpText = document.createElement('p');
+        helpText.style.fontSize = '0.95rem';
+        helpText.style.color = '#6B7280';
+        helpText.innerHTML = '💡 <strong>Free tier limit reached.</strong> Upgrade to Premium for unlimited analyses.';
+        elements.errorMessage.appendChild(helpText);
+    } else if (message.includes('clear') || message.includes('visible')) {
+        const helpText = document.createElement('p');
+        helpText.style.fontSize = '0.95rem';
+        helpText.style.color = '#6B7280';
+        helpText.innerHTML = '💡 <strong>Try these tips:</strong><br>• Use good lighting<br>• Make sure text is clear<br>• Avoid shadows or glare';
+        elements.errorMessage.appendChild(helpText);
+    } else {
+        // Generic retry tip
+        const helpText = document.createElement('p');
+        helpText.style.fontSize = '0.95rem';
+        helpText.style.color = '#6B7280';
+        helpText.textContent = '💡 This is usually temporary. Try again in a moment.';
+        elements.errorMessage.appendChild(helpText);
+    }
+    
+    // Contact support link
+    const supportLink = document.createElement('p');
+    supportLink.style.marginTop = '1.5rem';
+    supportLink.style.fontSize = '0.9rem';
+    supportLink.innerHTML = 'Still having issues? <a href="mailto:david.bobek.business@gmail.com" style="color: #4F46E5; font-weight: 600;">Contact Support</a>';
+    elements.errorMessage.appendChild(supportLink);
     
     showSection('error');
 }
@@ -751,6 +820,39 @@ function showError(message) {
 elements.retryBtn.addEventListener('click', () => {
     showSection('upload');
 });
+
+// ===== Analytics Tracking =====
+function trackEvent(eventName, properties = {}) {
+    try {
+        const token = getToken();
+        
+        // Basic event data
+        const eventData = {
+            event: eventName,
+            timestamp: new Date().toISOString(),
+            user_agent: navigator.userAgent,
+            ...properties
+        };
+        
+        console.log('📊 Event:', eventName, properties);
+        
+        // Send to backend (non-blocking, don't await)
+        fetch('/api/analytics/event', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(eventData)
+        }).catch(err => {
+            // Silently fail - analytics should never break the app
+            console.debug('Analytics failed:', err);
+        });
+    } catch (error) {
+        // Silently fail - analytics should never break the app
+        console.debug('Analytics error:', error);
+    }
+}
 
 // ===== Health Check on Load =====
 async function checkHealth() {

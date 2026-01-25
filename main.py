@@ -349,6 +349,21 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         raise credentials_exception
     return user
 
+async def get_optional_user(credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer(auto_error=False))):
+    """Optional authentication - returns None if not authenticated"""
+    if credentials is None:
+        return None
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            return None
+        user = get_user(username=username)
+        return user
+    except JWTError:
+        return None
+
 app = FastAPI()
 
 # Mount static files
@@ -438,6 +453,216 @@ async def read_users_me(current_user: dict = Depends(get_current_user)):
         "email": current_user["email"]
     }
 
+# Password Reset Endpoints
+RESET_TOKENS_FILE = os.path.join(DATA_DIR, "reset_tokens.json")
+
+def load_reset_tokens():
+    if os.path.exists(RESET_TOKENS_FILE):
+        with open(RESET_TOKENS_FILE, 'r') as f:
+            return json.load(f)
+    return {}
+
+def save_reset_tokens(tokens):
+    try:
+        os.makedirs(os.path.dirname(RESET_TOKENS_FILE), exist_ok=True)
+        with open(RESET_TOKENS_FILE, 'w') as f:
+            json.dump(tokens, f, indent=2)
+    except Exception as e:
+        print(f"Error saving reset tokens: {e}")
+
+class PasswordResetRequest(BaseModel):
+    email: str
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    new_password: str
+
+@app.post("/api/password-reset/request")
+async def request_password_reset(reset_request: PasswordResetRequest):
+    """Generate a password reset token for the user"""
+    users = load_users()
+    
+    # Find user by email
+    user_found = None
+    username = None
+    for uname, user_data in users.items():
+        if user_data.get("email") == reset_request.email:
+            user_found = user_data
+            username = uname
+            break
+    
+    # Always return success to prevent email enumeration
+    if not user_found:
+        return {"message": "If that email exists, a reset link has been sent"}
+    
+    # Generate reset token
+    import secrets
+    reset_token = secrets.token_urlsafe(32)
+    
+    # Store token with expiration (1 hour)
+    reset_tokens = load_reset_tokens()
+    reset_tokens[reset_token] = {
+        "username": username,
+        "email": reset_request.email,
+        "expires_at": (datetime.now() + timedelta(hours=1)).isoformat(),
+        "used": False
+    }
+    save_reset_tokens(reset_tokens)
+    
+    # In production, send email here
+    # For now, log it (in production you'd use SendGrid, AWS SES, etc.)
+    print(f"🔑 Password reset token for {username}: {reset_token}")
+    print(f"Reset link: https://socratesparent-production.up.railway.app/static/reset-password.html?token={reset_token}")
+    
+    return {"message": "If that email exists, a reset link has been sent", "token": reset_token}
+
+@app.post("/api/password-reset/confirm")
+async def confirm_password_reset(reset_confirm: PasswordResetConfirm):
+    """Reset password using the token"""
+    if len(reset_confirm.new_password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 6 characters"
+        )
+    
+    reset_tokens = load_reset_tokens()
+    
+    if reset_confirm.token not in reset_tokens:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token"
+        )
+    
+    token_data = reset_tokens[reset_confirm.token]
+    
+    # Check if token is expired
+    expires_at = datetime.fromisoformat(token_data["expires_at"])
+    if datetime.now() > expires_at:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Reset token has expired"
+        )
+    
+    # Check if token was already used
+    if token_data.get("used"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Reset token has already been used"
+        )
+    
+    # Update password
+    users = load_users()
+    username = token_data["username"]
+    
+    if username not in users:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User not found"
+        )
+    
+    users[username]["hashed_password"] = get_password_hash(reset_confirm.new_password)
+    save_users(users)
+    
+    # Mark token as used
+    token_data["used"] = True
+    token_data["used_at"] = datetime.now().isoformat()
+    save_reset_tokens(reset_tokens)
+    
+    return {"message": "Password reset successful"}
+
+# Account Settings Endpoints
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+
+@app.post("/api/account/change-password")
+async def change_password(
+    password_change: PasswordChange,
+    current_user: dict = Depends(get_current_user)
+):
+    """Change user password (requires current password)"""
+    if len(password_change.new_password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be at least 6 characters"
+        )
+    
+    users = load_users()
+    user = users.get(current_user["username"])
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Verify current password
+    if not verify_password(password_change.current_password, user["hashed_password"]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Current password is incorrect"
+        )
+    
+    # Update password
+    user["hashed_password"] = get_password_hash(password_change.new_password)
+    save_users(users)
+    
+    return {"message": "Password changed successfully"}
+
+@app.post("/api/account/cancel-subscription")
+async def cancel_subscription(current_user: dict = Depends(get_current_user)):
+    """Cancel premium subscription (remove premium status)"""
+    users = load_users()
+    user = users.get(current_user["username"])
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if not user.get("is_premium"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No active subscription to cancel"
+        )
+    
+    # Remove premium status
+    user["is_premium"] = False
+    user["daily_scans_left"] = 3
+    user["subscription_cancelled_at"] = datetime.now().isoformat()
+    # Keep paddle_subscription_id for records
+    
+    save_users(users)
+    
+    return {"message": "Subscription cancelled successfully"}
+
+@app.delete("/api/account/delete")
+async def delete_account(current_user: dict = Depends(get_current_user)):
+    """Permanently delete user account"""
+    users = load_users()
+    
+    if current_user["username"] not in users:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Delete user
+    del users[current_user["username"]]
+    save_users(users)
+    
+    return {"message": "Account deleted successfully"}
+
+@app.get("/api/account/info")
+async def get_account_info(current_user: dict = Depends(get_current_user)):
+    """Get detailed account information"""
+    users = load_users()
+    user = users.get(current_user["username"])
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {
+        "username": user["username"],
+        "email": user["email"],
+        "is_premium": user.get("is_premium", False),
+        "created_at": user.get("created_at"),
+        "daily_scans_left": user.get("daily_scans_left", 3),
+        "paddle_subscription_id": user.get("paddle_subscription_id")
+    }
+
 @app.get("/api/user/status", response_model=UserStatus)
 async def get_user_status(current_user: dict = Depends(get_current_user)):
     """Get user's premium status and remaining scans"""
@@ -464,6 +689,81 @@ async def get_paddle_config(current_user: dict = Depends(get_current_user)):
         "price_id": os.getenv("PADDLE_PRICE_ID", ""),
         "user_id": current_user["username"]
     }
+
+# Simple analytics endpoint (non-blocking, for basic tracking)
+@app.post("/api/analytics/event")
+async def log_analytics_event(
+    request: Request,
+    current_user: dict = Depends(get_optional_user)
+):
+    """Log analytics events (non-critical, always returns 200)"""
+    try:
+        data = await request.json()
+        event_name = data.get("event", "unknown")
+        username = current_user.get("username", "anonymous") if current_user else "anonymous"
+        
+        # In production, you'd send this to analytics service (Google Analytics, Mixpanel, etc.)
+        # For now, just log to console
+        logger.info(f"📊 Analytics: {username} - {event_name} - {data.get('properties', {})}")
+        
+        return {"status": "logged"}
+    except Exception as e:
+        # Never fail the request
+        logger.debug(f"Analytics logging failed: {e}")
+        return {"status": "ignored"}
+
+# Contact Form Endpoint
+class ContactMessage(BaseModel):
+    name: str
+    email: str
+    subject: str
+    message: str
+
+CONTACT_MESSAGES_FILE = os.path.join(DATA_DIR, "contact_messages.json")
+
+def load_contact_messages():
+    if os.path.exists(CONTACT_MESSAGES_FILE):
+        with open(CONTACT_MESSAGES_FILE, 'r') as f:
+            return json.load(f)
+    return []
+
+def save_contact_message(message_data):
+    try:
+        messages = load_contact_messages()
+        messages.append(message_data)
+        os.makedirs(os.path.dirname(CONTACT_MESSAGES_FILE), exist_ok=True)
+        with open(CONTACT_MESSAGES_FILE, 'w') as f:
+            json.dump(messages, f, indent=2)
+    except Exception as e:
+        print(f"Error saving contact message: {e}")
+
+@app.post("/api/contact")
+async def submit_contact_form(contact: ContactMessage):
+    """Handle contact form submissions"""
+    # Validate
+    if len(contact.message) < 10:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Message must be at least 10 characters"
+        )
+    
+    # Save message
+    message_data = {
+        "name": contact.name,
+        "email": contact.email,
+        "subject": contact.subject,
+        "message": contact.message,
+        "submitted_at": datetime.now().isoformat(),
+        "read": False
+    }
+    
+    save_contact_message(message_data)
+    
+    # In production, send email notification to admin
+    print(f"📧 Contact form submission from {contact.name} ({contact.email}): {contact.subject}")
+    
+    return {"message": "Thank you! We'll get back to you soon."}
+
 
 @app.post("/api/admin/upgrade-test")
 async def admin_upgrade_test(username: str, admin_secret: str):

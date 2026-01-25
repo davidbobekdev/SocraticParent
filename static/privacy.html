@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Socratic Parent</title>
+    <link rel="stylesheet" href="/static/styles.css?v=17">
+    <style>
+        .legal-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .legal-container h1 {
+            color: #4F46E5;
+            margin-bottom: 10px;
+        }
+        .legal-container h2 {
+            color: #111827;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        .legal-container p, .legal-container li {
+            line-height: 1.8;
+            color: #374151;
+            margin-bottom: 15px;
+        }
+        .legal-container ul {
+            margin-left: 20px;
+        }
+        .last-updated {
+            color: #6B7280;
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #4F46E5;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .highlight {
+            background: #FEF3C7;
+            padding: 15px;
+            border-left: 4px solid #F59E0B;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="legal-container">
+            <a href="/" class="back-link">← Back to Home</a>
+            
+            <h1>Privacy Policy</h1>
+            <p class="last-updated">Last Updated: January 25, 2026</p>
+
+            <div class="highlight">
+                <strong>Quick Summary:</strong> We process homework images to provide educational guidance but do NOT permanently store them. Your uploaded images are deleted immediately after analysis.
+            </div>
+
+            <h2>1. Information We Collect</h2>
+            
+            <h3>Account Information</h3>
+            <p>When you register, we collect:</p>
+            <ul>
+                <li>Email address (for account identification and communication)</li>
+                <li>Password (securely hashed using bcrypt)</li>
+                <li>Registration date and last login time</li>
+            </ul>
+
+            <h3>Usage Data</h3>
+            <p>We automatically collect:</p>
+            <ul>
+                <li>Number of homework analyses performed</li>
+                <li>Premium subscription status</li>
+                <li>API usage patterns (for rate limiting)</li>
+            </ul>
+
+            <h3>Homework Images</h3>
+            <p>When you upload homework images:</p>
+            <ul>
+                <li>Images are sent to Google Gemini AI for analysis</li>
+                <li>Images are processed in memory only</li>
+                <li><strong>Images are NOT saved to our servers</strong></li>
+                <li>Images are deleted immediately after processing</li>
+            </ul>
+
+            <h2>2. How We Use Your Information</h2>
+            
+            <p>We use collected information to:</p>
+            <ul>
+                <li>Provide the Service and generate educational guidance</li>
+                <li>Authenticate your account and maintain security</li>
+                <li>Process subscription payments through Paddle</li>
+                <li>Track usage limits (3 free scans per day)</li>
+                <li>Communicate important service updates</li>
+                <li>Improve the Service based on usage patterns</li>
+            </ul>
+
+            <h2>3. Data Sharing and Third Parties</h2>
+            
+            <p>We share minimal data with trusted third parties:</p>
+            
+            <h3>Google Gemini AI</h3>
+            <ul>
+                <li>Homework images are sent to Google's Gemini API for processing</li>
+                <li>Google processes images according to their <a href="https://policies.google.com/privacy" target="_blank">Privacy Policy</a></li>
+                <li>We use Google's API for educational purposes only</li>
+            </ul>
+
+            <h3>Paddle (Payment Processor)</h3>
+            <ul>
+                <li>Payment information is handled entirely by Paddle</li>
+                <li>We receive subscription status updates via webhooks</li>
+                <li>We do NOT store credit card information</li>
+                <li>Paddle's <a href="https://www.paddle.com/legal/privacy" target="_blank">Privacy Policy</a> applies to payment data</li>
+            </ul>
+
+            <h3>Railway (Hosting Provider)</h3>
+            <ul>
+                <li>The Service is hosted on Railway's cloud infrastructure</li>
+                <li>Railway may log access for security and performance monitoring</li>
+            </ul>
+
+            <h2>4. Data Storage and Security</h2>
+            
+            <p>We implement security measures to protect your data:</p>
+            <ul>
+                <li><strong>Passwords:</strong> Hashed using bcrypt (never stored in plain text)</li>
+                <li><strong>Authentication:</strong> JWT tokens with secure HTTP headers</li>
+                <li><strong>Data Persistence:</strong> Account data stored in encrypted JSON format</li>
+                <li><strong>Image Storage:</strong> No permanent storage of uploaded images</li>
+                <li><strong>HTTPS:</strong> All communications encrypted in transit</li>
+            </ul>
+
+            <h2>5. Data Retention</h2>
+            
+            <ul>
+                <li><strong>Account Data:</strong> Retained as long as your account is active</li>
+                <li><strong>Homework Images:</strong> Deleted immediately after analysis (not retained)</li>
+                <li><strong>Usage Logs:</strong> Maintained for service operation and debugging</li>
+            </ul>
+
+            <h2>6. Your Rights</h2>
+            
+            <p>You have the right to:</p>
+            <ul>
+                <li><strong>Access:</strong> Request a copy of your personal data</li>
+                <li><strong>Correction:</strong> Update or correct your account information</li>
+                <li><strong>Deletion:</strong> Request account deletion by contacting support</li>
+                <li><strong>Export:</strong> Request export of your account data</li>
+                <li><strong>Opt-Out:</strong> Unsubscribe from marketing emails (if any)</li>
+            </ul>
+
+            <h2>7. Children's Privacy</h2>
+            
+            <p>The Service is designed for parents and guardians (18+ years). While parents may use the Service to help children with homework, we do not knowingly collect personal information directly from children under 13.</p>
+
+            <h2>8. Cookies and Tracking</h2>
+            
+            <p>We use minimal tracking technologies:</p>
+            <ul>
+                <li><strong>JWT Tokens:</strong> Stored in browser localStorage for authentication</li>
+                <li><strong>Session Data:</strong> Maintained during active use</li>
+                <li><strong>No Third-Party Cookies:</strong> We do not use advertising or tracking cookies</li>
+            </ul>
+
+            <h2>9. International Data Transfers</h2>
+            
+            <p>Your data may be transferred to and processed in countries where our service providers operate (primarily United States). By using the Service, you consent to such transfers.</p>
+
+            <h2>10. Changes to This Policy</h2>
+            
+            <p>We may update this Privacy Policy from time to time. We will notify users of material changes by:</p>
+            <ul>
+                <li>Updating the "Last Updated" date</li>
+                <li>Sending email notifications for significant changes</li>
+                <li>Displaying notices within the Service</li>
+            </ul>
+
+            <h2>11. Contact Us</h2>
+            
+            <p>For privacy-related questions or requests, contact us at:</p>
+            <p><strong>Email:</strong> <a href="mailto:privacy@socratesparent.com">privacy@socratesparent.com</a></p>
+            <p><strong>Support:</strong> <a href="mailto:david.bobek.business@gmail.com">david.bobek.business@gmail.com</a></p>
+
+            <h2>12. Data Protection Compliance</h2>
+            
+            <p>We are committed to complying with applicable data protection laws, including GDPR (for EU users) and CCPA (for California residents). For specific rights under these regulations, please contact us.</p>
+
+            <p style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #E5E7EB;">
+                By using Socratic Parent, you acknowledge that you have read and understood this Privacy Policy.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
