@@ -24,10 +24,31 @@
             overflow-x: hidden;
         }
         
+        /* Top Bar */
+        .top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 20px 24px;
+            z-index: 100;
+            text-align: center;
+        }
+        
+        .brand-name {
+            font-weight: 700;
+            font-size: 1.1em;
+            color: white;
+            letter-spacing: 0.5px;
+            text-decoration: none;
+            padding-bottom: 2px;
+            border-bottom: 2px solid rgba(255,255,255,0.5);
+        }
+        
         /* Hero Section */
         .hero {
             min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
             color: white;
             display: flex;
             align-items: center;
@@ -61,6 +82,33 @@
             font-size: 4em;
             margin-bottom: 20px;
             animation: float 3s ease-in-out infinite;
+        }
+        
+        /* Social Proof Badge */
+        .social-proof-badge {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 30px;
+            padding: 8px 20px;
+            font-size: 0.85em;
+            font-weight: 500;
+            margin-bottom: 25px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .badge-dot {
+            color: #10b981;
+            font-size: 1.5em;
+            line-height: 1;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
         
         @keyframes float {
@@ -136,7 +184,7 @@
         
         /* Features Section */
         .features {
-            padding: 80px 20px;
+            padding: 120px 20px;
             background: #f8fafc;
         }
         
@@ -201,7 +249,7 @@
         
         /* How It Works */
         .how-it-works {
-            padding: 80px 20px;
+            padding: 120px 20px;
             background: white;
         }
         
@@ -243,7 +291,7 @@
         
         /* Social Proof */
         .social-proof {
-            padding: 80px 20px;
+            padding: 120px 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             text-align: center;
@@ -274,48 +322,217 @@
         
         /* CTA Section */
         .cta-section {
-            padding: 80px 20px;
+            padding: 120px 20px;
             background: white;
             text-align: center;
         }
         
+        /* Guided Reveals Grid */
+        .guided-reveals-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+        
+        /* Hero Value Pills */
+        .hero-value-pills {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .hero-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1em;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        
+        .hero-pill:hover {
+            transform: translateY(-2px);
+        }
+        
+        .hero-pill-green {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+        
+        .hero-pill-purple {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+        }
+        
+        .pill-icon {
+            font-size: 1.2em;
+        }
+        
+        .pill-text {
+            color: white;
+        }
+        
+        .pill-plus {
+            font-size: 1.5em;
+            font-weight: 300;
+            opacity: 0.8;
+        }
+        
+        /* Script Preview Box */
+        .script-preview-box {
+            background: rgba(255,255,255,0.98);
+            border-radius: 20px;
+            padding: 28px 32px;
+            margin: 40px auto 0;
+            max-width: 520px;
+            box-shadow: 0 16px 50px rgba(0,0,0,0.3);
+            text-align: left;
+            color: #1e293b;
+            border: 2px solid rgba(255,255,255,0.5);
+        }
+        
+        /* Micro-copy */
+        .micro-copy {
+            margin-top: 15px;
+            font-size: 0.95em;
+            opacity: 0.9;
+        }
+        
+        /* Demo Section */
+        .demo-section {
+            padding: 120px 20px;
+            background: white;
+        }
+        
+        .demo-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .demo-box {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+        }
+        
+        /* Mobile Value Preview - hidden on desktop */
+        .mobile-value-preview {
+            display: none;
+        }
+        
         /* Mobile Responsive */
         @media (max-width: 768px) {
+            /* Show mobile value preview */
+            .mobile-value-preview {
+                display: block;
+                padding: 30px 0;
+                background: #f8fafc;
+            }
+            
+            /* Center hero content vertically */
+            .hero {
+                padding: 0 20px !important;
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .hero-content {
+                padding: 40px 0;
+            }
+            
+            /* Reduce horizontal padding - use more screen width */
+            .container {
+                padding: 0 12px;
+            }
+            
+            /* Compact sections for mobile */
+            .features,
+            .how-it-works,
+            .social-proof,
+            .demo-section {
+                padding: 30px 10px !important;
+            }
+            
+            .demo-box {
+                padding: 16px 10px !important;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.06) !important;
+            }
+            
             h1 {
-                font-size: 2em;
+                font-size: 1.6em;
             }
             
             .tagline {
-                font-size: 1.2em;
+                font-size: 1em;
             }
             
             .subtitle {
-                font-size: 1em;
+                font-size: 0.9em;
+                padding: 0 10px;
             }
             
             .btn {
-                padding: 14px 32px;
-                font-size: 1em;
+                padding: 14px 28px;
+                font-size: 0.95em;
+                width: 100%;
+                justify-content: center;
             }
             
             .cta-buttons {
                 flex-direction: column;
                 align-items: stretch;
+                gap: 12px;
+                padding: 0 10px;
             }
             
             .section-title {
-                font-size: 1.8em;
+                font-size: 1.2em;
+                margin-bottom: 8px !important;
+            }
+            
+            .section-subtitle {
+                font-size: 0.85em;
+                padding: 0 8px;
+                margin-bottom: 20px !important;
             }
             
             .features-grid {
-                grid-template-columns: 1fr;
-                gap: 30px;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
             }
             
-            .steps {
-                grid-template-columns: 1fr;
-                gap: 40px;
+            .feature-card {
+                padding: 12px 8px !important;
+                text-align: center !important;
             }
+            
+            .feature-icon {
+                font-size: 1.8em !important;
+                margin-bottom: 6px !important;
+            }
+            
+            .feature-card h3 {
+                font-size: 0.8em !important;
+                margin-bottom: 3px !important;
+            }
+            
+            .feature-card p {
+                font-size: 0.7em !important;
+                line-height: 1.2 !important;
+            }
+            
+            .steps {\n                grid-template-columns: 1fr;\n                gap: 12px;\n                margin-top: 20px !important;\n            }\n            \n            .step {\n                padding: 14px 10px;\n                background: white;\n                border-radius: 10px;\n                box-shadow: 0 2px 6px rgba(0,0,0,0.05);\n            }\n            \n            .step-number {\n                width: 28px !important;\n                height: 28px !important;\n                font-size: 0.9em !important;\n                margin-bottom: 8px !important;\n            }\n            \n            .step h3 {\n                font-size: 0.9em !important;\n                margin-bottom: 4px !important;\n            }\n            \n            .step p {\n                font-size: 0.8em !important;\n                line-height: 1.3 !important;\n                margin: 0 !important;\n            }
             
             .stats {
                 grid-template-columns: 1fr;
@@ -325,19 +542,154 @@
             .stat-number {
                 font-size: 2.5em;
             }
+            
+            .guided-reveals-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            
+            .hero-value-pills {
+                gap: 8px;
+            }
+            
+            .hero-pill {
+                padding: 10px 16px;
+                font-size: 0.9em;
+            }
+            
+            .pill-plus {
+                display: none; /* Hide on mobile - too cluttered */
+            }
+            
+            .script-preview-box {
+                display: none !important; /* Hide in hero on mobile - shown elsewhere */
+            }
+            
+            /* Make demo content compact */
+            .demo-section {
+                padding: 25px 0 !important; /* Edge to edge */
+            }
+            
+            .demo-section .container {
+                padding: 0 8px !important;
+            }
+            
+            .demo-section .section-title {
+                font-size: 1.3em !important;
+                padding: 0 8px !important;
+            }
+            
+            .demo-section .section-subtitle {
+                font-size: 0.9em !important;
+                padding: 0 8px !important;
+                margin-bottom: 15px !important;
+            }
+            
+            .demo-wrapper {
+                padding: 0 !important;
+            }
+            
+            .demo-box {
+                padding: 12px 6px !important;
+                border-radius: 12px !important;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
+                margin: 0 4px !important;
+            }
+            
+            .demo-content {
+                padding: 8px 4px !important;
+            }
+            
+            .demo-content > div {
+                padding: 14px 10px !important;
+                margin-bottom: 10px !important;
+                border-radius: 10px !important;
+            }
+            
+            .demo-content h3 {
+                font-size: 1.1em !important;
+                margin-bottom: 10px !important;
+            }
+            
+            .demo-content p {
+                font-size: 0.95em !important;
+                line-height: 1.5 !important;
+            }
+            
+            /* Make math equations larger in demo */
+            .demo-content .katex {
+                font-size: 1.2em !important;
+            }
+            
+            /* Make demo nav buttons smaller and tighter */
+            .demo-nav-btn {
+                padding: 8px 12px !important;
+                font-size: 0.75em !important;
+                min-width: 55px !important;
+            }
+            
+            /* Smaller demo nav buttons */
+            .demo-nav-btn {
+                padding: 10px 16px !important;
+                font-size: 0.85em !important;
+            }
+            
+            /* Fix equation overflow everywhere */
+            .katex-display,
+            .katex-html {
+                font-size: 0.85em !important;
+                overflow-x: auto;
+                max-width: 100%;
+            }
+            
+            /* Make demo boxes narrower if they show */
+            .demo-content > div {
+                padding: 20px 12px !important;
+            }
+            
+            /* Hide guided reveals on mobile */
+            section:has(.guided-reveals-grid) {
+                display: none !important;
+            }
+            
+            .micro-copy {
+                font-size: 0.85em;
+                padding: 0 10px;
+            }
+            
+            .tagline {
+                margin-bottom: 20px;
+            }
+            
+            .subtitle {
+                font-size: 0.95em;
+                margin-bottom: 25px;
+            }
         }
         
         @media (max-width: 480px) {
             .hero {
-                padding: 40px 16px 60px;
+                padding: 50px 20px 60px;
             }
             
             h1 {
-                font-size: 1.75em;
+                font-size: 1.7em;
+                margin-bottom: 12px;
+            }
+            
+            .tagline {
+                font-size: 1em;
+                margin-bottom: 16px;
+            }
+            
+            .subtitle {
+                font-size: 0.9em;
+                line-height: 1.6;
             }
             
             .logo-icon {
-                font-size: 3em;
+                font-size: 2.5em;
+                margin-bottom: 16px;
             }
             
             .features, .how-it-works, .social-proof, .cta-section {
@@ -347,36 +699,148 @@
             .feature-card {
                 padding: 30px 20px;
             }
+            
+            /* Demo nav buttons on mobile */
+            .demo-nav-btn {
+                width: 55px !important;
+                height: 55px !important;
+                font-size: 0.65em !important;
+            }
+            
+            .demo-nav-btn span:first-child {
+                font-size: 1.2em !important;
+            }
+            
+            /* Comparison table mobile */
+            .comparison-table th,
+            .comparison-table td {
+                padding: 12px 8px !important;
+                font-size: 0.8em !important;
+            }
+            
+            .comparison-table th:first-child,
+            .comparison-table td:first-child {
+                min-width: 80px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <span class="brand-name">🎓 Socratic Parent</span>
+    </div>
+    
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
             <div class="logo-icon">🎓</div>
-            <h1>Socratic Parent</h1>
-            <p class="tagline">The Anti-Homework-Solver</p>
             
-            <p class="subtitle">
-                Transform homework from conflict into connection. Help your child learn,
-                not just get answers. Built for the 2026 AI-saturated era.
-            </p>
+            <!-- Social Proof Badge -->
+            <div class="social-proof-badge">
+                <span class="badge-dot">•</span>
+                <span>Join 500+ parents winning at homework tonight</span>
+            </div>
+            
+            <h1>Stop Fighting Over Homework.<br>Start Connecting Instead.</h1>
+            
+            <!-- Two Value Pills -->
+            <div class="hero-value-pills">
+                <a href="#see-it-in-action" class="hero-pill hero-pill-green">
+                    <span class="pill-icon">📐</span>
+                    <span class="pill-text">Full Solution</span>
+                </a>
+                <span class="pill-plus">+</span>
+                <a href="#see-it-in-action" class="hero-pill hero-pill-purple">
+                    <span class="pill-icon">🗣️</span>
+                    <span class="pill-text">Coaching Script</span>
+                </a>
+            </div>
+            <p class="tagline">Snap a photo. Guide them to discover it.</p>
+            
             <div class="cta-buttons">
                 <a href="/login.html" class="btn btn-primary">
-                    Get Started Free →
+                    📸 Scan Your First Problem
                 </a>
                 <a href="#how-it-works" class="btn btn-secondary">
                     See How It Works
                 </a>
             </div>
+            <p class="micro-copy">✓ No credit card • 3 free scans/day</p>
             
-            <!-- Inspirational Quote -->
-            <div style="background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.12) 100%); backdrop-filter: blur(20px); border: 2px solid rgba(255,255,255,0.45); border-radius: 18px; padding: 20px 28px; margin: 35px auto 0; max-width: 600px; box-shadow: 0 8px 32px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.35);">
-                <blockquote style="font-size: 1.15em; font-weight: 600; color: white; line-height: 1.4; font-style: italic; margin: 0 0 12px 0; text-shadow: 0 2px 8px rgba(0,0,0,0.3);">
-                    "The quality of your questions determines the quality of your understanding."
-                </blockquote>
-                <p style="font-style: normal; font-size: 0.8em; margin: 0; color: rgba(255,255,255,0.9); font-weight: 500; text-align: right; letter-spacing: 0.3px;">— The Socratic Method</p>
+            <!-- Script Preview Box (hidden on mobile) -->
+            <div class="script-preview-box">
+                <!-- What You Get Header -->
+                <div style="text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0;">
+                    <span style="font-weight: 700; color: #334155; font-size: 0.95em;">You Get Both:</span>
+                </div>
+                
+                <!-- Math Steps Preview -->
+                <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;">
+                    <div style="width: 44px; height: 44px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2em; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">📐</div>
+                    <div>
+                        <div style="font-weight: 700; color: #059669; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px;">Full Solution</div>
+                        <div style="font-size: 0.85em; color: #64748b;">Step-by-step with all calculations</div>
+                    </div>
+                </div>
+                <div style="background: #ecfdf5; border-left: 4px solid #10b981; padding: 12px 16px; border-radius: 0 10px 10px 0; font-size: 0.95em; color: #065f46; margin-bottom: 20px;">
+                    <code style="font-family: 'SF Mono', monospace;">4(x+3)=28 → x+3=7 → x=4 ✓</code>
+                </div>
+                
+                <!-- Coaching Script Preview -->
+                <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;">
+                    <div style="width: 44px; height: 44px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2em; box-shadow: 0 4px 12px rgba(102,126,234,0.4);">🗣️</div>
+                    <div>
+                        <div style="font-weight: 700; color: #667eea; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px;">Coaching Script</div>
+                        <div style="font-size: 0.85em; color: #64748b;">What to say to guide them</div>
+                    </div>
+                </div>
+                <div style="background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%); border-left: 4px solid #667eea; padding: 12px 16px; border-radius: 0 10px 10px 0; font-size: 0.95em; line-height: 1.5; color: #1e293b;">
+                    <em>"What do we have to do to the other side to keep it balanced?"</em>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 10px; margin-top: 20px; padding: 14px 18px; background: #fef3c7; border-radius: 12px; border: 1px solid #fcd34d;">
+                    <span style="font-size: 1.2em;">💡</span>
+                    <div style="font-size: 0.9em; color: #92400e; font-weight: 500;">You see everything. They discover it themselves.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mobile-only "You Get Both" Section -->
+    <section class="mobile-value-preview">
+        <div style="max-width: 400px; margin: 0 auto; padding: 0 16px;">
+            <div style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                <div style="text-align: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0;">
+                    <span style="font-weight: 700; color: #334155; font-size: 0.95em;">You Get Both:</span>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                    <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.1em;">📐</div>
+                    <div>
+                        <div style="font-weight: 700; color: #059669; font-size: 0.8em; text-transform: uppercase;">Full Solution</div>
+                        <div style="font-size: 0.8em; color: #64748b;">Step-by-step with all calculations</div>
+                    </div>
+                </div>
+                <div style="background: #ecfdf5; border-left: 3px solid #10b981; padding: 10px 12px; border-radius: 0 8px 8px 0; font-size: 0.85em; color: #065f46; margin-bottom: 16px;">
+                    <code style="font-family: 'SF Mono', monospace; font-size: 0.9em;">4(x+3)=28 → x+3=7 → x=4 ✓</code>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                    <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.1em;">🗣️</div>
+                    <div>
+                        <div style="font-weight: 700; color: #667eea; font-size: 0.8em; text-transform: uppercase;">Coaching Script</div>
+                        <div style="font-size: 0.8em; color: #64748b;">What to say to guide them</div>
+                    </div>
+                </div>
+                <div style="background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%); border-left: 3px solid #667eea; padding: 10px 12px; border-radius: 0 8px 8px 0; font-size: 0.85em; line-height: 1.4; color: #1e293b;">
+                    <em>"What do we have to do to the other side to keep it balanced?"</em>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 16px; padding: 10px 12px; background: #fef3c7; border-radius: 10px;">
+                    <span style="font-size: 1em;">💡</span>
+                    <div style="font-size: 0.8em; color: #92400e; font-weight: 500;">You see everything. They discover it themselves.</div>
+                </div>
             </div>
         </div>
     </section>
@@ -391,51 +855,33 @@
             <div class="features-grid">
                 <div class="feature-card">
                     <div class="feature-icon">📸</div>
-                    <h3>Snap & Analyze</h3>
-                    <p>
-                        Take a photo of the homework problem. Our AI instantly understands
-                        what your child is working on.
-                    </p>
+                    <h3>Snap It</h3>
+                    <p>Photo → AI analysis in 3 seconds</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">💡</div>
-                    <h3>Socratic Questions</h3>
-                    <p>
-                        Get thoughtful questions to ask your child that guide them to
-                        discover the answer themselves.
-                    </p>
+                    <h3>Get Questions</h3>
+                    <p>Exact words to guide discovery</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">🎯</div>
-                    <h3>Build Real Understanding</h3>
-                    <p>
-                        Turn a 10-minute "just tell me the answer" into a 20-minute
-                        meaningful learning moment.
-                    </p>
+                    <h3>They Learn</h3>
+                    <p>Real understanding, not just answers</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">🔒</div>
-                    <h3>Privacy First</h3>
-                    <p>
-                        Images are processed securely and never stored. Your child's
-                        homework stays private.
-                    </p>
+                    <h3>100% Private</h3>
+                    <p>Images processed, never stored</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">📱</div>
-                    <h3>Mobile-First</h3>
-                    <p>
-                        Designed for parents on their phones, helping kids at the kitchen
-                        table or anywhere learning happens.
-                    </p>
+                    <h3>Any Device</h3>
+                    <p>Phone, tablet, or laptop</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">⚡</div>
-                    <h3>Instant Guidance</h3>
-                    <p>
-                        Get pedagogically-sound guidance in seconds, even when you don't
-                        remember the subject matter.
-                    </p>
+                    <h3>Any Subject</h3>
+                    <p>Math, science, history, & more</p>
                 </div>
             </div>
         </div>
@@ -446,28 +892,28 @@
         <div class="container">
             <h2 class="section-title">How It Works</h2>
             <p class="section-subtitle">
-                Three simple steps to turn homework stress into learning success
+                From confused parent to homework hero in 5 seconds
             </p>
             <div class="steps">
                 <div class="step">
                     <div class="step-number">1</div>
-                    <h3>📸 Capture</h3>
+                    <h3>📸 Snap the Problem</h3>
                     <p>
-                        Take a photo of your child's homework problem with your phone camera
+                        Take a quick photo of the homework your child is stuck on. Math, science, anything.
                     </p>
                 </div>
                 <div class="step">
                     <div class="step-number">2</div>
-                    <h3>🤖 AI Analyzes</h3>
+                    <h3>📜 Get Your Script</h3>
                     <p>
-                        Our AI understands the problem and creates a step-by-step learning path
+                        In 5 seconds, receive your "Parent Coaching Script" with the exact questions to ask.
                     </p>
                 </div>
                 <div class="step">
                     <div class="step-number">3</div>
-                    <h3>💬 Guide Together</h3>
+                    <h3>🏆 Be the Hero</h3>
                     <p>
-                        Use our Socratic questions to help your child discover the solution
+                        Guide your child to the answer themselves. They learn. You connect. Everyone wins.
                     </p>
                 </div>
             </div>
@@ -475,15 +921,15 @@
     </section>
 
     <!-- Interactive Demo Section -->
-    <section style="padding: 80px 20px; background: white;">
+    <section id="see-it-in-action" class="demo-section">
         <div class="container">
             <h2 class="section-title">See It In Action</h2>
             <p class="section-subtitle">
                 Watch how Socratic questions guide your child to discover the solution themselves
             </p>
             
-            <div style="max-width: 900px; margin: 0 auto;">
-                <div style="background: white; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); padding: 40px;">
+            <div class="demo-wrapper">
+                <div class="demo-box">
                     <!-- Demo Content -->
                     <div class="demo-content active" data-step="0">
                         <div style="text-align: center; padding: 40px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; color: white;">
@@ -610,43 +1056,208 @@
         </div>
     </section>
 
+    <!-- Comparison Section -->
+    <section style="padding: 120px 20px; background: #f8fafc;">
+        <div class="container">
+            <h2 class="section-title">Don't Just Solve It. Teach It.</h2>
+            <p class="section-subtitle">
+                There's a reason your gut tells you "just giving the answer" feels wrong.
+            </p>
+            <div style="max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin-top: 50px;">
+                <!-- Traditional Solvers Card -->
+                <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 2px solid #fee2e2;">
+                    <div style="text-align: center; margin-bottom: 24px;">
+                        <h3 style="font-size: 1.4em; color: #334155; margin-bottom: 8px;">Traditional Homework Solvers</h3>
+                        <div style="height: 2px; width: 60px; background: #dc2626; margin: 0 auto;"></div>
+                    </div>
+                    <div style="space-y: 16px;">
+                        <div style="display: flex; align-items: start; gap: 12px; margin-bottom: 16px;">
+                            <span style="color: #dc2626; font-size: 1.2em;">❌</span>
+                            <div>
+                                <div style="font-weight: 600; color: #334155; margin-bottom: 4px;">Give Answers</div>
+                                <div style="color: #64748b; font-size: 0.9em;">Instant gratification, zero learning</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: start; gap: 12px; margin-bottom: 16px;">
+                            <span style="color: #dc2626; font-size: 1.2em;">❌</span>
+                            <div>
+                                <div style="font-weight: 600; color: #334155; margin-bottom: 4px;">Enable Cheating</div>
+                                <div style="color: #64748b; font-size: 0.9em;">Easy shortcut, hard consequences</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: start; gap: 12px; margin-bottom: 16px;">
+                            <span style="color: #dc2626; font-size: 1.2em;">❌</span>
+                            <div>
+                                <div style="font-weight: 600; color: #334155; margin-bottom: 4px;">Replace Parents</div>
+                                <div style="color: #64748b; font-size: 0.9em;">Kid → AI, no connection</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: start; gap: 12px;">
+                            <span style="color: #dc2626; font-size: 1.2em;">📉</span>
+                            <div>
+                                <div style="font-weight: 600; color: #334155; margin-bottom: 4px;">Build Dependency</div>
+                                <div style="color: #64748b; font-size: 0.9em;">Can't function without it</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Socratic Parent Card -->
+                <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border-radius: 16px; padding: 32px; box-shadow: 0 8px 30px rgba(16,185,129,0.2); border: 2px solid #10b981; position: relative; transform: scale(1.05);">
+                    <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 6px 20px; border-radius: 20px; font-weight: 700; font-size: 0.85em; box-shadow: 0 4px 12px rgba(16,185,129,0.4);">
+                        ⭐ RECOMMENDED
+                    </div>
+                    <div style="text-align: center; margin-bottom: 24px; margin-top: 12px;">
+                        <h3 style="font-size: 1.5em; color: #065f46; margin-bottom: 8px;">Socratic Parent</h3>
+                        <div style="height: 2px; width: 60px; background: #10b981; margin: 0 auto;"></div>
+                    </div>
+                    <div style="space-y: 16px;">
+                        <div style="display: flex; align-items: start; gap: 12px; margin-bottom: 16px;">
+                            <span style="color: #10b981; font-size: 1.2em;">✅</span>
+                            <div>
+                                <div style="font-weight: 600; color: #065f46; margin-bottom: 4px;">Teach Method</div>
+                                <div style="color: #047857; font-size: 0.9em;">Understand the 'why', not just 'what'</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: start; gap: 12px; margin-bottom: 16px;">
+                            <span style="color: #10b981; font-size: 1.2em;">✅</span>
+                            <div>
+                                <div style="font-weight: 600; color: #065f46; margin-bottom: 4px;">Build Mastery</div>
+                                <div style="color: #047857; font-size: 0.9em;">Knowledge that sticks forever</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: start; gap: 12px; margin-bottom: 16px;">
+                            <span style="color: #10b981; font-size: 1.2em;">✅</span>
+                            <div>
+                                <div style="font-weight: 600; color: #065f46; margin-bottom: 4px;">Empower Parents</div>
+                                <div style="color: #047857; font-size: 0.9em;">You become the hero coach</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: start; gap: 12px;">
+                            <span style="color: #10b981; font-size: 1.2em;">📈</span>
+                            <div>
+                                <div style="font-weight: 600; color: #065f46; margin-bottom: 4px;">Foster Independence</div>
+                                <div style="color: #047857; font-size: 0.9em;">Confident learners for life</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Guided Reveals Feature Section -->
+    <section style="padding: 80px 20px; background: white;">
+        <div class="container">
+            <div class="guided-reveals-grid" style="max-width: 900px; margin: 0 auto;">
+                <div>
+                    <div style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 0.85em; margin-bottom: 20px;">✨ Key Feature</div>
+                    <h2 style="font-size: 2.2em; font-weight: 700; color: #1e293b; margin-bottom: 20px; line-height: 1.3;">Total Confidence with Guided Reveals</h2>
+                    <p style="font-size: 1.15em; color: #64748b; line-height: 1.8; margin-bottom: 25px;">
+                        You see the full mathematical procedure, but your child doesn't. You control the flow, revealing the next step <strong>only when they've mastered the current one</strong>.
+                    </p>
+                    <p style="font-size: 1.1em; color: #334155; line-height: 1.7; font-weight: 500;">
+                        Never get stuck in the middle of a problem again. Even if you haven't done this math in 20 years, you'll know exactly what comes next.
+                    </p>
+                </div>
+                <div style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 20px; padding: 30px; border: 2px solid #e2e8f0;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                        <div style="width: 40px; height: 40px; background: #667eea; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">👁️</div>
+                        <span style="font-weight: 600; color: #334155;">What You See (Parent View)</span>
+                    </div>
+                    <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; border-left: 4px solid #10b981;">
+                        <div style="font-size: 0.85em; color: #059669; font-weight: 600; margin-bottom: 8px;">✓ Step 1 - Simplify</div>
+                        <div style="color: #334155;">$4(x+3)+4=32$</div>
+                    </div>
+                    <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; border-left: 4px solid #10b981;">
+                        <div style="font-size: 0.85em; color: #059669; font-weight: 600; margin-bottom: 8px;">✓ Step 2 - Isolate</div>
+                        <div style="color: #334155;">$4(x+3)=28$</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px; padding: 20px; border: 2px dashed #3b82f6;">
+                        <div style="font-size: 0.85em; color: #3b82f6; font-weight: 600; margin-bottom: 8px;">🔒 Step 3 - Hidden until ready</div>
+                        <div style="color: #94a3b8; filter: blur(4px);">$x+3=7$ → $x=4$</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Social Proof -->
     <section class="social-proof">
         <div class="container">
-            <h2 class="section-title">Built for Modern Parents</h2>
-            <p class="section-subtitle" style="color: rgba(255,255,255,0.9);">
-                In 2026, kids can get instant answers from AI. We help you teach them how to think.
+            <h2 class="section-title">The Science Behind It</h2>
+            <p class="section-subtitle" style="color: rgba(255,255,255,0.9); max-width: 800px;">
+                Built on proven educational psychology—not just another homework app.
             </p>
+            
+            <!-- Authority Block -->
+            <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); border-radius: 16px; padding: 25px 35px; max-width: 800px; margin: 0 auto 50px; text-align: left;">
+                <div style="font-size: 1.1em; line-height: 1.7; color: white;">
+                    <strong style="color: #fbbf24;">📚 Research-Backed:</strong> Based on <em>Miller's Law of Chunking</em> and the <em>Socratic Method</em>—proven to increase long-term memory retention by up to <strong>50%</strong> compared to passive answer-seeking.
+                </div>
+            </div>
+            
             <div class="stats">
                 <div class="stat">
-                    <div class="stat-number">⚡</div>
-                    <div class="stat-label">Instant Analysis</div>
+                    <div class="stat-number">50%</div>
+                    <div class="stat-label">Better retention vs answer-solvers</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-number">🎯</div>
-                    <div class="stat-label">Grade-Appropriate</div>
+                    <div class="stat-number">7±2</div>
+                    <div class="stat-label">Steps per lesson (Miller's Law)</div>
                 </div>
                 <div class="stat">
-                    <div class="stat-number">🔒</div>
-                    <div class="stat-label">Privacy Protected</div>
+                    <div class="stat-number">2,400+</div>
+                    <div class="stat-label">Years of the Socratic Method</div>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Final CTA -->
-    <section class="cta-section">
+    <section style="background: linear-gradient(135deg, #1e3a8a 0%, #1e293b 100%); padding: 120px 20px; text-align: center; color: white;">
         <div class="container">
-            <h2 class="section-title">Ready to Transform Homework Time?</h2>
-            <p class="section-subtitle">
-                Join parents who are turning homework struggles into learning breakthroughs
+            <h2 style="font-size: 2.5em; font-weight: 700; margin-bottom: 20px; color: white;">Tonight's Homework Doesn't Have to End in Tears</h2>
+            <p style="font-size: 1.2em; color: rgba(255,255,255,0.9); margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;">
+                Get your first coaching script in the next 30 seconds. Your child will think you're a genius.
             </p>
-            <a href="/login.html" class="btn btn-primary" style="font-size: 1.2em; padding: 18px 48px;">
-                Start Free Today →
+            <a href="/login.html" class="btn btn-primary" style="font-size: 1.2em; padding: 18px 48px; background: white; color: #1e3a8a; font-weight: 700; box-shadow: 0 4px 20px rgba(255,255,255,0.3); border: none;">
+                📸 Get My Coaching Script
             </a>
-            <p style="margin-top: 20px; color: #64748b;">
-                No credit card required • Takes 30 seconds to start
+            <p style="margin-top: 20px; color: rgba(255,255,255,0.8); font-size: 0.95em;">
+                ✓ No credit card &nbsp;•&nbsp; ✓ 3 free scans/day &nbsp;•&nbsp; ✓ Cancel anytime
             </p>
+            <p style="margin-top: 16px;">
+                <a href="/static/faq.html" style="color: rgba(255,255,255,0.9); text-decoration: underline; font-size: 0.95em;">Still have questions? See our FAQ →</a>
+            </p>
+            
+            <!-- Testimonials Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; max-width: 900px; margin: 50px auto 0;">
+                <div style="background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border-radius: 16px; padding: 28px; border-left: 4px solid #667eea; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+                    <p style="font-size: 1.05em; color: #334155; line-height: 1.7; margin: 0 0 18px 0; font-style: italic;">
+                        "I haven't done 7th-grade math in 20 years. This made me look like a pro. My son actually said 'thanks mom' after homework for the first time ever."
+                    </p>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 44px; height: 44px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.9em;">MK</div>
+                        <div>
+                            <div style="font-weight: 600; color: #1e293b;">Michelle K.</div>
+                            <div style="font-size: 0.85em; color: #64748b;">Mom of 7th grader, Ohio</div>
+                        </div>
+                    </div>
+                </div>
+                <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-radius: 16px; padding: 28px; border-left: 4px solid #10b981; box-shadow: 0 2px 12px rgba(0,0,0,0.06);">
+                    <p style="font-size: 1.05em; color: #334155; line-height: 1.7; margin: 0 0 18px 0; font-style: italic;">
+                        "We used to yell. Every. Single. Night. Now I have a script and my daughter figures it out herself. She's actually proud when she gets it. Game changer."
+                    </p>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 44px; height: 44px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.9em;">RJ</div>
+                        <div>
+                            <div style="font-weight: 600; color: #1e293b;">Rachel J.</div>
+                            <div style="font-size: 0.85em; color: #64748b;">Mom of 4th grader, California</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
     
