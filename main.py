@@ -1919,6 +1919,61 @@ async def create_session(current_user: dict = Depends(get_current_user)):
     import uuid
     return {"session_id": str(uuid.uuid4())}
 
+# Trial scan tracking (in-memory for simplicity, resets on restart)
+trial_scans = {}
+
+@app.post("/analyze-trial")
+async def analyze_homework_trial(
+    request: Request,
+    file: UploadFile = File(...),
+    grade: Optional[str] = Form(None),
+    trial_id: Optional[str] = Form(None)
+):
+    """
+    Trial endpoint - allows ONE free scan without authentication.
+    Tracks by trial_id (client-generated UUID stored in localStorage).
+    """
+    # Get client identifier (trial_id from client or fallback to IP)
+    client_id = trial_id or request.client.host
+    
+    # Check if this client already used their trial
+    if client_id in trial_scans:
+        return JSONResponse(
+            status_code=402,
+            content={
+                "error": "Trial used",
+                "reason": "TRIAL_EXHAUSTED",
+                "message": "You've already used your free trial! Create an account to continue.",
+                "show_signup": True
+            }
+        )
+    
+    if not file.content_type or not file.content_type.startswith('image/'):
+        return JSONResponse(status_code=400, content={"error": "Invalid file type"})
+    
+    contents = await file.read()
+    
+    try:
+        result = await analyze_homework_with_ai(contents)
+        
+        if not result.get("success", False):
+            return JSONResponse(status_code=500, content={"error": result.get("error", "Analysis failed")})
+        
+        # Mark trial as used AFTER successful analysis
+        trial_scans[client_id] = {
+            "used_at": datetime.now().isoformat(),
+            "ip": request.client.host
+        }
+        
+        # Add trial info to response
+        result["trial_used"] = True
+        result["show_signup_prompt"] = True
+        result["message"] = "Great! You've seen how it works. Create a free account to get 3 free scans a day!"
+        
+        return result
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
 @app.post("/analyze")
 async def analyze_homework(
     file: UploadFile = File(...),
@@ -1938,7 +1993,7 @@ async def analyze_homework(
                 "reason": "PAYWALL_TRIGGER",
                 "is_premium": False,
                 "scans_left": 0,
-                "message": "You've used all 3 free scans today. Upgrade to Premium for unlimited access!"
+                "message": "You've used all your 3 free scans today. Upgrade to Premium for unlimited access!"
             }
         )
     

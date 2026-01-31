@@ -65,7 +65,62 @@ function logout() {
     window.location.href = '/';
 }
 
+// ===== Trial Mode Detection =====
+function isTrialMode() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('trial') === '1';
+}
+
+function hasUsedTrial() {
+    return localStorage.getItem('trial_used') === 'true';
+}
+
+function markTrialUsed() {
+    localStorage.setItem('trial_used', 'true');
+}
+
+function getTrialId() {
+    let trialId = localStorage.getItem('trial_id');
+    if (!trialId) {
+        trialId = 'trial_' + Math.random().toString(36).substring(2, 15) + Date.now();
+        localStorage.setItem('trial_id', trialId);
+    }
+    return trialId;
+}
+
 async function checkAuth() {
+    // Check if trial mode
+    if (isTrialMode()) {
+        // Trial mode - allow access without auth
+        console.log('Trial mode active');
+        
+        // Hide user-specific UI elements
+        const userInfoEl = document.getElementById('userInfo');
+        const usageInfoEl = document.getElementById('usageInfo');
+        const upgradeBtn = document.getElementById('upgradeBtn');
+        const logoutBtn = document.querySelector('.logout-btn');
+        
+        if (userInfoEl) userInfoEl.textContent = '🎁 Free Trial';
+        if (usageInfoEl) usageInfoEl.textContent = hasUsedTrial() ? '0 trials left' : '1 free trial';
+        if (upgradeBtn) upgradeBtn.style.display = 'none';
+        if (logoutBtn) logoutBtn.textContent = 'Sign Up';
+        if (logoutBtn) logoutBtn.onclick = () => window.location.href = '/login.html';
+        
+        // Add home button for trial users
+        const headerRight = document.querySelector('.header-right');
+        if (headerRight && !document.getElementById('homeBtn')) {
+            const homeBtn = document.createElement('button');
+            homeBtn.id = 'homeBtn';
+            homeBtn.className = 'home-btn';
+            homeBtn.innerHTML = '🏠';
+            homeBtn.title = 'Back to Home';
+            homeBtn.onclick = () => window.location.href = '/';
+            headerRight.insertBefore(homeBtn, headerRight.firstChild);
+        }
+        
+        return true; // Allow access in trial mode
+    }
+    
     const token = getToken();
     if (!token) {
         window.location.href = '/';
@@ -256,6 +311,81 @@ function showPaywall(paywallData) {
     if (paywallData.usage) {
         updateUsageDisplay(paywallData.usage);
     }
+}
+
+// ===== Trial Modals =====
+function showTrialExhaustedModal() {
+    showSection('upload');
+    
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('trialExhaustedModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'trialExhaustedModal';
+        modal.className = 'trial-modal-overlay';
+        modal.innerHTML = `
+            <div class="trial-modal-content">
+                <div class="trial-modal-icon">🎯</div>
+                <h2>You've Used Your Free Trial!</h2>
+                <p>You've seen how Socratic Parent works. Now unlock unlimited access!</p>
+                <ul class="trial-modal-features">
+                    <li>✅ 3 free scans a day</li>
+                    <li>✅ Full coaching scripts</li>
+                    <li>✅ All subjects supported</li>
+                    <li>✅ Step-by-step solutions</li>
+                </ul>
+                <button class="trial-modal-btn primary" onclick="window.location.href='/login.html'">
+                    📧 Create Free Account
+                </button>
+                <button class="trial-modal-btn secondary" onclick="closeTrialModal()">
+                    Maybe Later
+                </button>
+                <p class="trial-modal-note">No credit card required</p>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    modal.classList.add('show');
+}
+
+function showSignupPromptModal() {
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('signupPromptModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'signupPromptModal';
+        modal.className = 'trial-modal-overlay';
+        modal.innerHTML = `
+            <div class="trial-modal-content">
+                <div class="trial-modal-icon">🎉</div>
+                <h2>That Was Your Free Preview!</h2>
+                <p>Love it? Create a free account to keep using Socratic Parent!</p>
+                <ul class="trial-modal-features">
+                    <li>✅ 3 free scans a day</li>
+                    <li>✅ Works on any device</li>
+                </ul>
+                <button class="trial-modal-btn primary" onclick="window.location.href='/login.html'">
+                    🚀 Create Free Account
+                </button>
+                <button class="trial-modal-btn secondary" onclick="closeTrialModal()">
+                    Keep Browsing Results
+                </button>
+                <p class="trial-modal-note">Takes 10 seconds • No credit card</p>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    modal.classList.add('show');
+}
+
+function closeTrialModal() {
+    const exhaustedModal = document.getElementById('trialExhaustedModal');
+    const promptModal = document.getElementById('signupPromptModal');
+    
+    if (exhaustedModal) exhaustedModal.classList.remove('show');
+    if (promptModal) promptModal.classList.remove('show');
 }
 
 // ===== DOM Elements =====
@@ -474,9 +604,16 @@ async function analyzeHomework() {
         return;
     }
     
+    // Check if trial mode and already used
+    if (isTrialMode() && hasUsedTrial()) {
+        showTrialExhaustedModal();
+        return;
+    }
+    
     trackEvent('analyze_started', { 
         grade: elements.gradeSelect.value,
-        fileSize: selectedFile.size 
+        fileSize: selectedFile.size,
+        isTrialMode: isTrialMode()
     });
     
     // Show loading state
@@ -492,29 +629,41 @@ async function analyzeHomework() {
             formData.append('grade', grade);
         }
         
-        // Include session ID if available
-        if (sessionId) {
-            formData.append('session_id', sessionId);
+        // Determine endpoint and headers based on mode
+        let endpoint = '/analyze';
+        let headers = { 'Accept': 'application/json' };
+        
+        if (isTrialMode()) {
+            endpoint = '/analyze-trial';
+            formData.append('trial_id', getTrialId());
+        } else {
+            // Include session ID and auth for regular mode
+            if (sessionId) {
+                formData.append('session_id', sessionId);
+            }
+            const token = getToken();
+            headers['Authorization'] = `Bearer ${token}`;
         }
         
-        const token = getToken();
-        
         // Call API with proper error handling
-        const response = await fetch('/analyze', {
+        const response = await fetch(endpoint, {
             method: 'POST',
             body: formData,
-            headers: {
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
+            headers: headers
         }).catch(err => {
             throw new Error('Cannot connect to server. Please ensure the application is running.');
         });
         
-        // Handle paywall (402 Payment Required)
+        // Handle trial exhausted (402)
         if (response.status === 402) {
-            const paywallData = await response.json().catch(() => ({}));
-            showPaywall(paywallData);
+            const data = await response.json().catch(() => ({}));
+            if (data.show_signup || isTrialMode()) {
+                markTrialUsed();
+                showTrialExhaustedModal();
+                return;
+            }
+            // Regular paywall for authenticated users
+            showPaywall(data);
             return;
         }
         
@@ -525,6 +674,11 @@ async function analyzeHomework() {
         
         const result = await response.json();
         
+        // Handle trial response
+        if (result.trial_used) {
+            markTrialUsed();
+        }
+        
         // Update usage display if usage info is included
         if (result.usage) {
             updateUsageDisplay(result.usage);
@@ -532,10 +686,18 @@ async function analyzeHomework() {
         
         trackEvent('analyze_success', { 
             subject: result.subject,
-            isPremium: result.usage?.is_premium || false
+            isPremium: result.usage?.is_premium || false,
+            isTrial: isTrialMode()
         });
         
         displayResults(result);
+        
+        // Show signup prompt after displaying results in trial mode
+        if (result.show_signup_prompt) {
+            setTimeout(() => {
+                showSignupPromptModal();
+            }, 30000); // Show after 30 seconds to let them fully explore results
+        }
         
     } catch (error) {
         console.error('Analysis error:', error);
@@ -639,6 +801,12 @@ function displayResults(data) {
 
 // New analysis button
 elements.newAnalysisBtn.addEventListener('click', (e) => {
+    // In trial mode, if trial is used, show signup modal
+    if (isTrialMode() && hasUsedTrial()) {
+        showTrialExhaustedModal();
+        return;
+    }
+    
     // Reset state
     selectedFile = null;
     elements.fileInput.value = '';

@@ -30,9 +30,11 @@
             top: 0;
             left: 0;
             right: 0;
-            padding: 20px 24px;
+            padding: 16px 24px;
             z-index: 100;
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
         .brand-name {
@@ -43,6 +45,60 @@
             text-decoration: none;
             padding-bottom: 2px;
             border-bottom: 2px solid rgba(255,255,255,0.5);
+        }
+        
+        .nav-login {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .nav-login a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9em;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-login .login-link {
+            opacity: 0.9;
+        }
+        
+        .nav-login .login-link:hover {
+            opacity: 1;
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .nav-login .signup-link {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .nav-login .signup-link:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        /* Mobile: Single compact button */
+        @media (max-width: 480px) {
+            .top-bar {
+                padding: 12px 16px;
+            }
+            
+            .brand-name {
+                font-size: 0.95em;
+            }
+            
+            .nav-login .login-link {
+                display: none; /* Hide "Log in" on mobile */
+            }
+            
+            .nav-login .signup-link {
+                font-size: 0.8em;
+                padding: 8px 14px;
+            }
         }
         
         /* Hero Section */
@@ -729,6 +785,10 @@
     <!-- Top Bar -->
     <div class="top-bar">
         <span class="brand-name">🎓 Socratic Parent</span>
+        <nav class="nav-login">
+            <a href="/login.html" class="login-link">Log in</a>
+            <a href="/login.html" class="signup-link">Sign in</a>
+        </nav>
     </div>
     
     <!-- Hero Section -->
@@ -759,14 +819,14 @@
             <p class="tagline">Snap a photo. Guide them to discover it.</p>
             
             <div class="cta-buttons">
-                <a href="/login.html" class="btn btn-primary">
+                <a href="/static/index.html?trial=1" class="btn btn-primary">
                     📸 Scan Your First Problem
                 </a>
                 <a href="#how-it-works" class="btn btn-secondary">
                     See How It Works
                 </a>
             </div>
-            <p class="micro-copy">✓ No credit card • 3 free scans/day</p>
+            <p class="micro-copy">✓ No credit card • Try free — no signup needed</p>
             
             <!-- Script Preview Box (hidden on mobile) -->
             <div class="script-preview-box">
@@ -1221,11 +1281,11 @@
             <p style="font-size: 1.2em; color: rgba(255,255,255,0.9); margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;">
                 Get your first coaching script in the next 30 seconds. Your child will think you're a genius.
             </p>
-            <a href="/login.html" class="btn btn-primary" style="font-size: 1.2em; padding: 18px 48px; background: white; color: #1e3a8a; font-weight: 700; box-shadow: 0 4px 20px rgba(255,255,255,0.3); border: none;">
+            <a href="/static/index.html?trial=1" class="btn btn-primary" style="font-size: 1.2em; padding: 18px 48px; background: white; color: #1e3a8a; font-weight: 700; box-shadow: 0 4px 20px rgba(255,255,255,0.3); border: none;">
                 📸 Get My Coaching Script
             </a>
             <p style="margin-top: 20px; color: rgba(255,255,255,0.8); font-size: 0.95em;">
-                ✓ No credit card &nbsp;•&nbsp; ✓ 3 free scans/day &nbsp;•&nbsp; ✓ Cancel anytime
+                ✓ No credit card &nbsp;•&nbsp; ✓ 3 free scans a day &nbsp;•&nbsp; ✓ Cancel anytime
             </p>
             <p style="margin-top: 16px;">
                 <a href="/static/faq.html" style="color: rgba(255,255,255,0.9); text-decoration: underline; font-size: 0.95em;">Still have questions? See our FAQ →</a>
