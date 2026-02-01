@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ - Socratic Parent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+        
+        .home-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 18px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9em;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
+            z-index: 100;
+        }
+        
+        .home-button:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: -40px auto 60px;
+            padding: 0 20px;
+        }
+        
+        .faq-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        
+        .faq-item {
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+        
+        .faq-question {
+            padding: 24px 28px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        
+        .faq-question:hover {
+            background: #f8fafc;
+        }
+        
+        .faq-question h3 {
+            font-size: 1.1em;
+            color: #1e293b;
+            font-weight: 600;
+            flex: 1;
+        }
+        
+        .faq-icon {
+            font-size: 1.5em;
+            color: #667eea;
+            transition: transform 0.3s;
+        }
+        
+        .faq-item.active .faq-icon {
+            transform: rotate(45deg);
+        }
+        
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .faq-answer-content {
+            padding: 0 28px 24px;
+            color: #64748b;
+            line-height: 1.7;
+        }
+        
+        .faq-answer-content p {
+            margin-bottom: 12px;
+        }
+        
+        .faq-answer-content strong {
+            color: #334155;
+        }
+        
+        .cta-box {
+            margin-top: 40px;
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+            border: 2px solid #10b981;
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+        }
+        
+        .cta-box h2 {
+            font-size: 1.5em;
+            color: #065f46;
+            margin-bottom: 12px;
+        }
+        
+        .cta-box p {
+            color: #047857;
+            margin-bottom: 20px;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            padding: 14px 32px;
+            background: #10b981;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .cta-button:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        }
+        
+        @media (max-width: 640px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .header {
+                padding: 50px 20px;
+            }
+            
+            .faq-question {
+                padding: 20px 20px;
+            }
+            
+            .faq-answer-content {
+                padding: 0 20px 20px;
+            }
+            
+            .home-button {
+                top: 12px;
+                left: 12px;
+                padding: 8px 14px;
+                font-size: 0.85em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Home Button -->
+    <a href="/" class="home-button" title="Back to Home">
+        <span>←</span> Home
+    </a>
+    
+    <div class="header">
+        <h1>❓ Frequently Asked Questions</h1>
+        <p>Everything you need to know about Socratic Parent</p>
+    </div>
+    
+    <div class="container">
+        <div class="faq-card">
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>What is Socratic Parent?</h3>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>Socratic Parent is an AI-powered homework helper that teaches <strong>you</strong> how to coach your child using the Socratic method. Instead of giving answers, we give you the right questions to ask.</p>
+                        <p>Snap a photo of any homework problem, and get a personalized coaching script with questions that guide your child to discover the solution themselves.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>How does the free trial work?</h3>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p><strong>Try before you sign up:</strong> Click "Scan Your First Problem" to try one scan instantly — no account needed.</p>
+                        <p><strong>Free tier:</strong> Create a free account and get 3 free scans every day. No credit card required.</p>
+                        <p><strong>Premium:</strong> Upgrade anytime for unlimited scans at $9.99/month.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>What subjects are supported?</h3>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>We support all major subjects:</p>
+                        <p><strong>Math:</strong> Arithmetic, algebra, geometry, calculus</p>
+                        <p><strong>Science:</strong> Physics, chemistry, biology</p>
+                        <p><strong>Humanities:</strong> English, history, reading comprehension</p>
+                        <p>From kindergarten through high school!</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>How is this different from other homework apps?</h3>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p><strong>Traditional homework solvers</strong> just give the answer — your child copies it and learns nothing.</p>
+                        <p><strong>Socratic Parent</strong> gives you a coaching script with questions that help your child <em>think through</em> the problem. They learn the concept, not just the answer.</p>
+                        <p>It's like having a master teacher guide you through homework time.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>Do you store my child's homework images?</h3>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p><strong>No.</strong> Privacy is our top priority.</p>
+                        <p>Images are processed in real-time and immediately discarded. We never store your homework photos on our servers.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>Can I cancel anytime?</h3>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>Yes! Premium subscriptions can be canceled anytime from your account settings. No long-term commitment required.</p>
+                        <p>If you cancel, you'll keep premium access until the end of your billing period, then you'll revert to the free tier (3 scans/day).</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>I forgot my password. What do I do?</h3>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>No worries! Just <a href="/static/contact.html" style="color: #667eea; font-weight: 600;">contact us</a> with your username or email, and we'll help you reset your password within 24 hours.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    <h3>Who built this?</h3>
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    <div class="faq-answer-content">
+                        <p>Socratic Parent was built by David, a parent frustrated with traditional homework helpers that just gave answers instead of teaching.</p>
+                        <p>The tool is based on proven educational psychology and the Socratic method — turning homework time from conflict into connection.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="cta-box">
+            <h2>Still have questions?</h2>
+            <p>We're here to help! Send us a message and we'll get back to you within 24 hours.</p>
+            <a href="/static/contact.html" class="cta-button">Contact Us</a>
+        </div>
+    </div>
+
+    <script>
+        // Toggle FAQ items
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', () => {
+                const item = question.parentElement;
+                const answer = item.querySelector('.faq-answer');
+                const isActive = item.classList.contains('active');
+                
+                // Close all items
+                document.querySelectorAll('.faq-item').forEach(i => {
+                    i.classList.remove('active');
+                    i.querySelector('.faq-answer').style.maxHeight = '0';
+                });
+                
+                // Open clicked item if it wasn't active
+                if (!isActive) {
+                    item.classList.add('active');
+                    answer.style.maxHeight = answer.scrollHeight + 'px';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
