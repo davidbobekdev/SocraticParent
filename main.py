@@ -262,7 +262,7 @@ def check_and_update_usage_limit(username: str) -> dict:
     if 'is_premium' not in user:
         user['is_premium'] = False
     if 'daily_scans_left' not in user:
-        user['daily_scans_left'] = 3
+        user['daily_scans_left'] = 5
     if 'last_reset' not in user:
         user['last_reset'] = datetime.now().isoformat()
     
@@ -272,7 +272,7 @@ def check_and_update_usage_limit(username: str) -> dict:
     hours_since_reset = (now - last_reset).total_seconds() / 3600
     
     if hours_since_reset >= 24:
-        user['daily_scans_left'] = 3
+        user['daily_scans_left'] = 5
         user['last_reset'] = now.isoformat()
     
     # Premium users have unlimited scans
@@ -412,7 +412,7 @@ async def register(user: UserCreate):
         "hashed_password": hashed_password,
         "created_at": datetime.utcnow().isoformat(),
         "is_premium": False,
-        "daily_scans_left": 3,
+        "daily_scans_left": 5,
         "last_reset": datetime.now().isoformat(),
         "paddle_subscription_id": None
     }
@@ -675,7 +675,7 @@ async def cancel_subscription(current_user: dict = Depends(get_current_user)):
     
     # Remove premium status
     user["is_premium"] = False
-    user["daily_scans_left"] = 3
+    user["daily_scans_left"] = 5
     user["subscription_cancelled_at"] = datetime.now().isoformat()
     # Keep paddle_subscription_id for records
     
@@ -711,7 +711,7 @@ async def get_account_info(current_user: dict = Depends(get_current_user)):
         "email": user["email"],
         "is_premium": user.get("is_premium", False),
         "created_at": user.get("created_at"),
-        "daily_scans_left": user.get("daily_scans_left", 3),
+        "daily_scans_left": user.get("daily_scans_left", 5),
         "paddle_subscription_id": user.get("paddle_subscription_id")
     }
 
@@ -725,22 +725,24 @@ async def get_user_status(current_user: dict = Depends(get_current_user)):
     if 'is_premium' not in user:
         user['is_premium'] = False
     if 'daily_scans_left' not in user:
-        user['daily_scans_left'] = 3
+        user['daily_scans_left'] = 5
     
     return {
         "username": current_user["username"],
         "email": user.get("email", current_user["username"]),
         "is_premium": user.get("is_premium", False),
-        "scans_left": user.get("daily_scans_left", 3) if not user.get("is_premium") else -1
+        "scans_left": user.get("daily_scans_left", 5) if not user.get("is_premium") else -1
     }
 
 @app.get("/api/paddle/client-token")
 async def get_paddle_config(current_user: dict = Depends(get_current_user)):
     """Get Paddle configuration for frontend checkout"""
+    user = get_user(current_user["username"])
     return {
         "client_token": os.getenv("PADDLE_CLIENT_TOKEN", ""),
         "price_id": os.getenv("PADDLE_PRICE_ID", ""),
-        "user_id": current_user["username"]
+        "user_id": current_user["username"],
+        "user_email": user.get("email", f"{current_user['username']}@example.com")
     }
 
 # Simple analytics endpoint (non-blocking, for basic tracking)
@@ -2099,7 +2101,7 @@ async def analyze_homework_trial(
         # Add trial info to response
         result["trial_used"] = True
         result["show_signup_prompt"] = True
-        result["message"] = "Great! You've seen how it works. Create a free account to get 3 free scans a day!"
+        result["message"] = "Great! You've seen how it works. Create a free account to get 5 free scans a day!"
         
         return result
     except Exception as e:
@@ -2124,7 +2126,7 @@ async def analyze_homework(
                 "reason": "PAYWALL_TRIGGER",
                 "is_premium": False,
                 "scans_left": 0,
-                "message": "You've used all your 3 free scans today. Upgrade to Premium for unlimited access!"
+                "message": "You've used all your 5 free scans today. Upgrade to Premium for unlimited access!"
             }
         )
     
@@ -2306,7 +2308,7 @@ async def paddle_webhook(request: Request):
             if user_data.get("paddle_subscription_id") == subscription_id:
                 user_data["is_premium"] = False
                 user_data["paddle_subscription_id"] = None
-                user_data["daily_scans_left"] = 3
+                user_data["daily_scans_left"] = 5
                 user_data["last_reset"] = datetime.now().isoformat()
                 save_users(users)
                 return JSONResponse(status_code=200, content={"success": True})

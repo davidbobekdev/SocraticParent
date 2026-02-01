@@ -48,7 +48,13 @@ async function checkAuth() {
             });
             
             if (response.ok) {
-                window.location.href = '/app';
+                // Check for upgrade parameter to redirect to checkout
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('upgrade') === '1') {
+                    window.location.href = '/app?upgrade=1';
+                } else {
+                    window.location.href = '/app';
+                }
             } else {
                 localStorage.removeItem('auth_token');
             }
@@ -89,7 +95,10 @@ loginForm.addEventListener('submit', async (e) => {
         if (response.ok) {
             saveToken(data.access_token);
             showAlert('Login successful! Redirecting...', 'success');
-            setTimeout(() => window.location.href = '/app', 1000);
+            // Check for upgrade parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirect = urlParams.get('upgrade') === '1' ? '/app?upgrade=1' : '/app';
+            setTimeout(() => window.location.href = redirect, 1000);
         } else {
             showAlert(data.detail || 'Login failed', 'error');
             submitBtn.disabled = false;
@@ -148,7 +157,10 @@ registerForm.addEventListener('submit', async (e) => {
         if (response.ok) {
             saveToken(data.access_token);
             showAlert('Account created! Redirecting...', 'success');
-            setTimeout(() => window.location.href = '/app', 1000);
+            // Check for upgrade parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirect = urlParams.get('upgrade') === '1' ? '/app?upgrade=1' : '/app';
+            setTimeout(() => window.location.href = redirect, 1000);
         } else {
             showAlert(data.detail || 'Registration failed', 'error');
             submitBtn.disabled = false;

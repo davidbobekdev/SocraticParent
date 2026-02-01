@@ -89,6 +89,17 @@ function getTrialId() {
 }
 
 async function checkAuth() {
+    // Check if upgrade parameter - redirect to login if not authenticated
+    const urlParams = new URLSearchParams(window.location.search);
+    const wantsUpgrade = urlParams.get('upgrade') === '1';
+    
+    const token = getToken();
+    if (wantsUpgrade && !token) {
+        // User wants to upgrade but isn't logged in - send to login
+        window.location.href = '/login.html?redirect=app&upgrade=1';
+        return false;
+    }
+    
     // Check if trial mode
     if (isTrialMode()) {
         // Trial mode - allow access without auth
@@ -127,7 +138,6 @@ async function checkAuth() {
         return true; // Allow access in trial mode
     }
     
-    const token = getToken();
     if (!token) {
         window.location.href = '/';
         return false;
@@ -274,7 +284,7 @@ async function openPaddleCheckout() {
         
         trackEvent('checkout_opened');
         
-        // Initialize Paddle with sandbox environment
+        // Initialize Paddle with sandbox environment (until account is approved)
         Paddle.Environment.set('sandbox');
         Paddle.Initialize({ 
             token: config.client_token,
@@ -293,7 +303,7 @@ async function openPaddleCheckout() {
         // Open checkout
         Paddle.Checkout.open({
             items: [{ priceId: config.price_id, quantity: 1 }],
-            customer: { email: `${config.user_id}@placeholder.email` },
+            customer: { email: config.user_email },
             customData: { user_id: config.user_id }
         });
         
@@ -374,7 +384,7 @@ function showTrialExhaustedModal() {
             <ul style="list-style: none; padding: 0; margin: 28px 0 32px 0; text-align: left;">
                 <li style="padding: 10px 0; color: #1e293b; font-size: 1rem; display: flex; align-items: center; gap: 10px;">
                     <span style="color: #10b981; font-size: 1.2rem;">✅</span>
-                    <span style="font-weight: 500;">3 free scans a day</span>
+                    <span style="font-weight: 500;">5 free scans a day</span>
                 </li>
                 <li style="padding: 10px 0; color: #1e293b; font-size: 1rem; display: flex; align-items: center; gap: 10px;">
                     <span style="color: #10b981; font-size: 1.2rem;">✅</span>
@@ -493,7 +503,7 @@ function showSignupPromptModal() {
             <ul style="list-style: none; padding: 0; margin: 28px 0 32px 0; text-align: left;">
                 <li style="padding: 10px 0; color: #1e293b; font-size: 1rem; display: flex; align-items: center; gap: 10px;">
                     <span style="color: #10b981; font-size: 1.2rem;">✅</span>
-                    <span style="font-weight: 500;">3 free scans every day</span>
+                    <span style="font-weight: 500;">5 free scans every day</span>
                 </li>
                 <li style="padding: 10px 0; color: #1e293b; font-size: 1rem; display: flex; align-items: center; gap: 10px;">
                     <span style="color: #10b981; font-size: 1.2rem;">✅</span>
@@ -1305,6 +1315,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isAuthenticated = await checkAuth();
     if (isAuthenticated) {
         initializeSession();
+        
+        // Check if user wants to upgrade
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('upgrade') === '1') {
+            // Remove the upgrade parameter from URL and open checkout
+            window.history.replaceState({}, document.title, window.location.pathname);
+            setTimeout(() => openPaddleCheckout(), 500);
+        }
     }
 });
 

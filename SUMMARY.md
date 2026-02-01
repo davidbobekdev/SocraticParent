@@ -153,10 +153,10 @@ Step 6: Verify & Reflect
 ### Freemium with Paddle Billing
 
 **Free Tier:**
-- 3 homework analyses per day
+- 5 homework analyses per day
 - Daily limit resets after 24 hours
 - Usage counter displayed in UI
-- Paywall triggers on 4th scan attempt
+- Paywall triggers on 6th scan attempt
 
 **Premium Tier ($9.99/month):**
 - Unlimited homework analyses
@@ -336,7 +336,7 @@ Use these to ensure the LLM understands the project:
 
 ## 15. SUMMARY IN ONE PARAGRAPH
 
-**Socratic Parent** is a web-based educational tool that transforms homework help from answer-giving into guided learning. Built for parents who want to help their children without cheating, it uses Google Gemini AI to analyze homework images and produce step-by-step "coaching scripts" following the Socratic method. Parents receive questions to ask—never answers to give—turning potential conflict into meaningful connection. The platform uses a freemium model (3 free scans/day, $9.99/month unlimited) powered by Paddle payments. Built with Python/FastAPI backend and vanilla JavaScript frontend, it's designed around cognitive psychology research (chunking, cognitive load theory) with beautiful KaTeX math rendering. Privacy-first: images are processed and never stored.
+**Socratic Parent** is a web-based educational tool that transforms homework help from answer-giving into guided learning. Built for parents who want to help their children without cheating, it uses Google Gemini AI to analyze homework images and produce step-by-step "coaching scripts" following the Socratic method. Parents receive questions to ask—never answers to give—turning potential conflict into meaningful connection. The platform uses a freemium model (5 free scans/day, $9.99/month unlimited) powered by Paddle payments. Built with Python/FastAPI backend and vanilla JavaScript frontend, it's designed around cognitive psychology research (chunking, cognitive load theory) with beautiful KaTeX math rendering. Privacy-first: images are processed and never stored.
 
 ---
 
