@@ -5,11 +5,15 @@ Socratic Parent - Simple Version with Image Upload and API Key Session
 import os
 import json
 import hashlib
+import smtplib
+import httpx
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from typing import Optional
 from google import genai
 from google.genai import types
-from fastapi import FastAPI, File, UploadFile, Form, Depends, HTTPException, status, Request
+from fastapi import FastAPI, File, UploadFile, Form, Depends, HTTPException, status, Request, BackgroundTasks
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
@@ -514,7 +518,8 @@ async def request_password_reset(reset_request: PasswordResetRequest):
     print(f"🔑 Password reset token for {username}: {reset_token}")
     print(f"Reset link: https://socratesparent-production.up.railway.app/static/reset-password.html?token={reset_token}")
     
-    return {"message": "If that email exists, a reset link has been sent", "token": reset_token}
+    # Don't return token in production for security
+    return {"message": "If that email exists, a reset link has been sent"}
 
 @app.post("/api/password-reset/confirm")
 async def confirm_password_reset(reset_confirm: PasswordResetConfirm):
@@ -737,8 +742,86 @@ def save_contact_message(message_data):
     except Exception as e:
         print(f"Error saving contact message: {e}")
 
+def send_contact_email(contact: ContactMessage):
+    """Send email notification for contact form submission using Resend API or mock mode"""
+    try:
+        resend_api_key = os.getenv("RESEND_API_KEY")
+        recipient_email = os.getenv("CONTACT_RECIPIENT_EMAIL", "david.bobek.business@gmail.com")
+        mock_mode = os.getenv("EMAIL_MOCK_MODE", "false").lower() == "true"
+        
+        # Create email body
+        html = f"""
+<html>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #667eea;">📧 New Contact Form Submission</h2>
+        <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p><strong>Name:</strong> {contact.name}</p>
+            <p><strong>Email:</strong> <a href="mailto:{contact.email}">{contact.email}</a></p>
+            <p><strong>Subject:</strong> {contact.subject}</p>
+        </div>
+        <div style="background: white; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <h3 style="margin-top: 0;">Message:</h3>
+            <p style="white-space: pre-wrap;">{contact.message}</p>
+        </div>
+        <p style="color: #64748b; font-size: 0.9em; margin-top: 20px;">
+            Submitted at: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+        </p>
+    </div>
+</body>
+</html>
+"""
+        
+        # Mock mode - log email instead of sending
+        if mock_mode or not resend_api_key:
+            print("=" * 60)
+            print("📧 [MOCK EMAIL] Contact Form Submission")
+            print("=" * 60)
+            print(f"To: {recipient_email}")
+            print(f"Reply-To: {contact.email}")
+            print(f"Subject: [Contact Form] {contact.subject}")
+            print("-" * 60)
+            print(f"From: {contact.name} ({contact.email})")
+            print(f"Message:\n{contact.message}")
+            print("=" * 60)
+            if not resend_api_key:
+                print("⚠️ RESEND_API_KEY not configured - email logged but not sent")
+            else:
+                print("✅ [MOCK MODE] Email logged successfully")
+            return True
+        
+        # Send via Resend API
+        response = httpx.post(
+            "https://api.resend.com/emails",
+            headers={
+                "Authorization": f"Bearer {resend_api_key}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "from": "Socratic Parent <onboarding@resend.dev>",
+                "to": [recipient_email],
+                "reply_to": contact.email,
+                "subject": f"[Contact Form] {contact.subject}",
+                "html": html
+            },
+            timeout=10.0
+        )
+        
+        if response.status_code == 200:
+            print(f"✅ Contact email sent to {recipient_email} via Resend")
+            return True
+        else:
+            print(f"❌ Resend API error: {response.status_code} - {response.text}")
+            return False
+        
+    except Exception as e:
+        print(f"❌ Error sending contact email: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
 @app.post("/api/contact")
-async def submit_contact_form(contact: ContactMessage):
+async def submit_contact_form(contact: ContactMessage, background_tasks: BackgroundTasks):
     """Handle contact form submissions"""
     # Validate
     if len(contact.message) < 10:
@@ -759,8 +842,8 @@ async def submit_contact_form(contact: ContactMessage):
     
     save_contact_message(message_data)
     
-    # In production, send email notification to admin
-    print(f"📧 Contact form submission from {contact.name} ({contact.email}): {contact.subject}")
+    # Send email notification in background (non-blocking)
+    background_tasks.add_task(send_contact_email, contact)
     
     return {"message": "Thank you! We'll get back to you soon."}
 
