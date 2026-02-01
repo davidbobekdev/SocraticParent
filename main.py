@@ -220,6 +220,7 @@ class UserLogin(BaseModel):
 
 class UserStatus(BaseModel):
     username: str
+    email: str
     is_premium: bool
     scans_left: int
 
@@ -611,6 +612,52 @@ async def change_password(
     
     return {"message": "Password changed successfully"}
 
+class SimplePasswordChange(BaseModel):
+    new_password: str
+
+@app.post("/api/account/update-password")
+async def update_password(
+    password_data: SimplePasswordChange,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update password without requiring current password (for logged-in users)"""
+    if len(password_data.new_password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 6 characters"
+        )
+    
+    users = load_users()
+    user = users.get(current_user["username"])
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Update password
+    user["hashed_password"] = get_password_hash(password_data.new_password)
+    save_users(users)
+    
+    return {"message": "Password updated successfully"}
+
+@app.post("/api/subscription/portal")
+async def subscription_portal(current_user: dict = Depends(get_current_user)):
+    """Get subscription management URL (Paddle customer portal or cancel page)"""
+    users = load_users()
+    user = users.get(current_user["username"])
+    
+    if not user or not user.get("is_premium"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No active subscription"
+        )
+    
+    # For now, redirect to cancel subscription endpoint info
+    # In production, this would redirect to Paddle's customer portal
+    return {
+        "message": "To manage your subscription, please contact support or use the cancel option below",
+        "can_cancel": True
+    }
+
 @app.post("/api/account/cancel-subscription")
 async def cancel_subscription(current_user: dict = Depends(get_current_user)):
     """Cancel premium subscription (remove premium status)"""
@@ -682,6 +729,7 @@ async def get_user_status(current_user: dict = Depends(get_current_user)):
     
     return {
         "username": current_user["username"],
+        "email": user.get("email", current_user["username"]),
         "is_premium": user.get("is_premium", False),
         "scans_left": user.get("daily_scans_left", 3) if not user.get("is_premium") else -1
     }
@@ -1926,22 +1974,22 @@ Keep language encouraging and appropriate for students."""
             if "**Practice Question:**" in analysis_text:
                 practice = analysis_text.split("**Practice Question:**")[1].strip()
             
-            # Generate Socratic questions based on the problem
+            # Generate Socratic questions based on the problem - use FULL content, not truncated
             foundation_q = "What information is given in this problem? What are we trying to find?"
             bridge_q = "Which mathematical concept or formula could help us solve this?"
             mastery_q = "Can you explain why we need to use these specific steps?"
             
-            # Try to extract better questions from the analysis
+            # Try to extract better questions from the analysis - use full content
             try:
                 if len(steps) > 0 and steps[0].get('content'):
-                    content_preview = steps[0]['content'][:100] if len(steps[0]['content']) > 100 else steps[0]['content']
-                    foundation_q = f"Look at this problem. {content_preview}... What do you notice first?"
+                    content = steps[0]['content'].strip()
+                    foundation_q = f"Look at this problem. {content} What do you notice first?"
                 if len(steps) > 1 and steps[1].get('content'):
-                    content_preview = steps[1]['content'][:100] if len(steps[1]['content']) > 100 else steps[1]['content']
-                    bridge_q = f"We know the rules. {content_preview}... How should we apply them?"
+                    content = steps[1]['content'].strip()
+                    bridge_q = f"We know the rules. {content} How should we apply them?"
                 if len(steps) > 2 and steps[2].get('content'):
-                    content_preview = steps[2]['content'][:100] if len(steps[2]['content']) > 100 else steps[2]['content']
-                    mastery_q = f"Think about the approach: {content_preview}... Why does this make sense?"
+                    content = steps[2]['content'].strip()
+                    mastery_q = f"Think about the approach: {content} Why does this make sense?"
             except Exception as q_error:
                 # Use default questions if extraction fails
                 pass

@@ -2,276 +2,476 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="description" content="The Anti-Homework-Solver: Transform homework into meaningful learning moments">
-    <title>Socratic Parent - Pedagogical Firewall</title>
-    <link rel="stylesheet" href="/static/styles.css?v=8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socratic Parent</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
-    
-    <!-- Paddle.js Billing v2 -->
     <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 8px;
+            line-height: 1.6;
+        }
+        .app { max-width: 100%; margin: 0 auto; }
+        /* Top bar with corner icons */
+        .top-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 2px 0px; margin-bottom: 6px;
+        }
+        .top-icon {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: rgba(255,255,255,0.2); border: none;
+            color: white; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .top-icon:hover { background: rgba(255,255,255,0.3); }
+        .top-icon svg { width: 18px; height: 18px; }
+        .top-center {
+            display: flex; align-items: center; gap: 8px;
+        }
+        .usage-pill {
+            background: #10b981; color: white;
+            padding: 6px 14px; border-radius: 20px;
+            font-size: 0.8rem; font-weight: 600;
+        }
+        .usage-pill.unlimited { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .upgrade-pill {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white; border: none;
+            padding: 6px 14px; border-radius: 20px;
+            font-size: 0.8rem; font-weight: 600;
+            cursor: pointer; display: none;
+        }
+        .upgrade-pill.show { display: inline-block; }
+        .settings-icon {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: rgba(255,255,255,0.15); border: none;
+            color: white; cursor: pointer; margin-left: 6px;
+        }
+        .settings-icon:hover { background: rgba(255,255,255,0.25); }
+        .settings-icon svg { width: 18px; height: 18px; }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+        }
+        .logo { text-align: center; margin-bottom: 16px; }
+        .logo svg { width: 40px; height: 40px; color: #667eea; margin-bottom: 6px; display: none; }
+        .logo h1 {
+            font-size: 1.4rem; font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 2px;
+        }
+        .logo p { color: #64748b; font-size: 0.8rem; margin-top: 0; }
+        .form-title { font-size: 1.15rem; font-weight: 700; color: #1e293b; text-align: center; margin-bottom: 6px; }
+        .form-sub { color: #64748b; text-align: center; margin-bottom: 16px; font-size: 0.9rem; }
+        label { display: block; font-weight: 600; color: #334155; font-size: 0.85rem; margin-bottom: 6px; margin-top: 0; }
+        .select-wrapper { position: relative; margin-bottom: 14px; }
+        .select-wrapper::after {
+            content: '';
+            position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+            width: 0; height: 0;
+            border-left: 6px solid transparent; border-right: 6px solid transparent;
+            border-top: 6px solid #667eea;
+            pointer-events: none;
+        }
+        select {
+            width: 100%; padding: 14px 44px 14px 16px;
+            border: 2px solid #e2e8f0; border-radius: 12px;
+            font-size: 1rem; color: #1e293b;
+            background: linear-gradient(135deg, #f8faff, #ffffff); cursor: pointer;
+            -webkit-appearance: none; -moz-appearance: none; appearance: none;
+            font-weight: 500;
+        }
+        select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.15); }
+        select:hover { border-color: #c7d2fe; }
+        select option { padding: 12px; background: white; }
+        .dropzone {
+            border: 2px dashed #c7d2fe; border-radius: 12px;
+            padding: 24px 16px; text-align: center;
+            background: linear-gradient(135deg, #f8faff, #eef2ff);
+            cursor: pointer; position: relative; margin-bottom: 12px;
+        }
+        .dropzone:hover { border-color: #667eea; }
+        .dropzone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 10; }
+        .drop-zone-content { display: flex; flex-direction: column; align-items: center; }
+        .dropzone svg { width: 48px; height: 48px; color: #667eea; margin-bottom: 10px; }
+        .dropzone p { color: #334155; font-weight: 600; }
+        .dropzone small { color: #94a3b8; }
+        .preview { position: relative; margin-bottom: 16px; }
+        .preview.hidden { display: none; }
+        .preview:not(.hidden) { display: block; }
+        .preview img { width: 100%; max-height: 280px; object-fit: contain; border-radius: 12px; background: #f8faff; }
+        .preview .remove {
+            position: absolute; top: 8px; right: 8px;
+            background: #ef4444; color: white; border: none;
+            width: 32px; height: 32px; border-radius: 50%;
+            font-size: 18px; cursor: pointer;
+        }
+        /* Final answer highlight */
+        .final-answer {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white; padding: 20px 24px; border-radius: 16px;
+            text-align: center; margin: 24px 0; font-size: 1.2rem;
+            box-shadow: 0 8px 25px rgba(16,185,129,0.3);
+        }
+        .final-answer strong { font-size: 1.5rem; display: block; margin-top: 8px; }
+        .btn {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            width: 100%; padding: 14px; border-radius: 12px;
+            font-size: 1rem; font-weight: 600; cursor: pointer;
+            border: none; transition: 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102,126,234,0.4); }
+        .btn-secondary { background: #f1f5f9; color: #475569; }
+        .btn-outline { background: transparent; border: 2px solid #e2e8f0; color: #64748b; }
+        .btn-outline:hover { border-color: #667eea; color: #667eea; }
+        .btn svg { width: 20px; height: 20px; }
+        .camera-btn { margin-bottom: 16px; }
+        .hidden { display: none !important; }
+        .loading { text-align: center; padding: 48px 20px; }
+        .spinner {
+            width: 48px; height: 48px;
+            border: 4px solid #e2e8f0; border-top-color: #667eea;
+            border-radius: 50%; animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading h3 { color: #1e293b; margin-bottom: 4px; }
+        .loading p { color: #64748b; }
+        .results-head { text-align: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #f1f5f9; }
+        .results-head h2 {
+            font-size: 1.4rem; font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .results-head p { color: #64748b; }
+        .badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white; padding: 8px 16px; border-radius: 25px;
+            font-size: 0.85rem; font-weight: 600; margin-bottom: 24px;
+        }
+        .q-item { margin-bottom: 24px; padding: 16px 16px 16px 20px; border-left: 4px solid; background: #fafbfc; border-radius: 0 12px 12px 0; }
+        .q-item.spark { border-color: #f59e0b; background: linear-gradient(135deg, #fffbeb, #fef3c7); }
+        .q-item.climb { border-color: #8b5cf6; background: linear-gradient(135deg, #faf5ff, #f3e8ff); }
+        .q-item.summit { border-color: #10b981; background: linear-gradient(135deg, #ecfdf5, #d1fae5); }
+        .q-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; }
+        .q-label.spark { color: #b45309; }
+        .q-label.climb { color: #6d28d9; }
+        .q-label.summit { color: #047857; }
+        .q-text { font-size: 0.95rem; line-height: 1.8; color: #1e293b; }
+        .q-text p { margin-bottom: 12px; }
+        .q-text p:last-child { margin-bottom: 0; font-weight: 600; font-style: italic; color: #334155; }
+        .q-text ul, .q-text ol { margin: 12px 0 12px 20px; }
+        .q-text li { margin-bottom: 8px; }
+        .tip {
+            background: #fffbeb; border-left: 4px solid #f59e0b;
+            padding: 16px 20px; margin: 24px 0; border-radius: 0 12px 12px 0;
+        }
+        .tip-label { font-size: 0.8rem; font-weight: 700; color: #b45309; text-transform: uppercase; margin-bottom: 8px; }
+        .tip-text { color: #78350f; line-height: 1.6; }
+        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 24px; }
+        .actions .full { grid-column: 1 / -1; }
+        .expand { margin-top: 24px; }
+        .expand-head { font-size: 0.85rem; font-weight: 700; color: #334155; text-transform: uppercase; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #f1f5f9; }
+        .expand-warn { background: #fef2f2; color: #991b1b; padding: 12px 16px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 16px; }
+        .expand-content { font-size: 0.95rem; line-height: 1.7; color: #475569; }
+        .expand-content p { margin-bottom: 10px; }
+        .expand-content ul, .expand-content ol { margin: 10px 0 10px 24px; }
+        .expand-content li { margin-bottom: 6px; }
+        .step-item { padding: 12px 0 12px 16px; border-left: 3px solid #10b981; margin-left: 6px; position: relative; }
+        .step-item::before {
+            content: ''; position: absolute; left: -8px; top: 18px;
+            width: 12px; height: 12px; background: #10b981; border-radius: 50%;
+            border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .step-num { font-size: 0.7rem; font-weight: 700; color: #10b981; text-transform: uppercase; margin-bottom: 4px; }
+        .step-title { font-weight: 700; color: #1e293b; margin-bottom: 12px; }
+        .step-text { color: #475569; line-height: 1.7; }
+        .step-text p { margin-bottom: 10px; }
+        .step-text ul, .step-text ol { margin: 12px 0 12px 4px; padding-left: 16px; list-style-position: outside; }
+        .step-text ol { counter-reset: step-counter; list-style: none; padding-left: 0; }
+        .step-text ol > li { counter-increment: step-counter; position: relative; padding-left: 28px; margin-bottom: 12px; }
+        .step-text ol > li::before {
+            content: counter(step-counter) ".";
+            position: absolute; left: 0; top: 0;
+            font-weight: 700; color: #667eea; font-size: 0.95rem;
+        }
+        .step-text ul > li { margin-bottom: 10px; padding-left: 6px; }
+        .step-text li { line-height: 1.6; }
+        .steps-done { text-align: center; padding: 16px; background: linear-gradient(135deg, #d1fae5, #a7f3d0); border-radius: 12px; color: #065f46; font-weight: 600; margin-top: 16px; }
+        .steps-btns { display: flex; gap: 12px; margin-top: 16px; }
+        .steps-btns .btn { flex: 1; }
+        .paywall {
+            position: absolute; inset: 0;
+            background: rgba(255,255,255,0.98);
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 24px; padding: 24px; z-index: 100;
+        }
+        .paywall-box { text-align: center; max-width: 320px; }
+        .paywall-box h2 { font-size: 1.5rem; color: #1e293b; margin-bottom: 12px; }
+        .paywall-box > p { color: #64748b; margin-bottom: 8px; }
+        .paywall-sub { font-weight: 600; color: #1e293b !important; margin-bottom: 20px !important; }
+        .paywall-list { list-style: none; text-align: left; margin-bottom: 24px; }
+        .paywall-list li { padding: 8px 0; color: #334155; }
+        .paywall-btn {
+            width: 100%; padding: 16px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white; border: none; border-radius: 12px;
+            font-size: 1rem; font-weight: 700; cursor: pointer; margin-bottom: 12px;
+        }
+        .paywall-note { font-size: 0.8rem; color: #94a3b8; }
+        .error { text-align: center; padding: 48px 20px; }
+        .error-icon { font-size: 3rem; margin-bottom: 16px; }
+        .error h3 { color: #1e293b; margin-bottom: 8px; }
+        .error p { color: #64748b; margin-bottom: 24px; }
+        .footer { text-align: center; padding: 24px 0; }
+        .footer p { color: rgba(255,255,255,0.95); font-size: 0.85rem; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        .footer strong { font-weight: 700; }
+        .modal {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.85);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000; padding: 20px;
+        }
+        .modal-box { background: white; border-radius: 20px; padding: 24px; max-width: 400px; width: 100%; }
+        .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .modal-head h3 { color: #1e293b; }
+        .modal-close { background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; }
+        .modal video { width: 100%; border-radius: 12px; margin-bottom: 16px; }
+        .modal-btns { display: flex; gap: 12px; }
+        .modal-btns .btn { flex: 1; }
+        .katex-display { margin: 12px 0; padding: 12px 8px; background: linear-gradient(135deg, #eff6ff, #dbeafe); border-radius: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+        .katex-display > .katex { font-size: 1em; max-width: 100%; overflow-x: auto; }
+        .q-text .katex, .expand-content .katex, .step-text .katex { background: rgba(102,126,234,0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.95em; }
+        @media (max-width: 400px) { .actions { grid-template-columns: 1fr; } }
+        @media (min-width: 768px) {
+            body { padding: 24px; display: flex; align-items: flex-start; justify-content: center; }
+            .app { max-width: 520px; }
+            .card { padding: 32px; border-radius: 24px; }
+            .logo svg { display: block; width: 48px; height: 48px; margin-bottom: 10px; }
+            .logo { margin-bottom: 28px; }
+            .logo h1 { font-size: 1.8rem; }
+            .logo p { font-size: 0.9rem; margin-top: 4px; }
+            .form-title { font-size: 1.25rem; margin-bottom: 8px; }
+            .form-sub { margin-bottom: 20px; font-size: 1rem; }
+            .top-bar { padding: 8px 4px; margin-bottom: 12px; }
+            .top-icon { width: 40px; height: 40px; }
+            .top-icon svg { width: 20px; height: 20px; }
+            .dropzone { padding: 36px 20px; border-radius: 16px; }
+            .results-head { margin-bottom: 24px; padding-bottom: 20px; }
+            .step-item { padding: 16px 0 16px 20px; margin-left: 8px; }
+            .step-text { line-height: 1.8; }
+            .step-text p { margin-bottom: 14px; }
+            .step-text ul, .step-text ol { margin: 16px 0 16px 8px; padding-left: 20px; }
+            .step-text ol > li { padding-left: 32px; margin-bottom: 16px; }
+            .step-text ul > li { margin-bottom: 12px; padding-left: 8px; }
+            .katex-display { margin: 16px 0; padding: 16px; border-radius: 12px; }
+        }
+        @media (min-width: 1024px) {
+            body { align-items: center; min-height: 100vh; }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
+    <div class="app">
+        <div class="top-bar">
+            <button class="top-icon" onclick="window.location.href='/'" title="Back">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+            </button>
+            <div class="top-center">
+                <span id="usageInfo" class="usage-pill"></span>
+                <button id="upgradeBtn" class="upgrade-pill">⭐ Upgrade</button>
+                <button class="settings-icon" onclick="window.location.href='/static/settings.html'" title="Settings">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12.22 2h-.44a2 2 0 0 0-2 1.83c0 .12-.05.24-.12.33L8.7 5.23A8 8 0 0 0 6.26 6.3l-1.9-.63A2 2 0 0 0 1.83 7.22v.56a2 2 0 0 0 1.53 1.94l1.9.63a8.1 8.1 0 0 0 0 2.5l-1.9.63A2 2 0 0 0 1.83 15.22v.56a2 2 0 0 0 2.53 1.94l1.9-.63a8 8 0 0 0 2.44 1.07l.96 1.07c.07.09.12.21.12.33a2 2 0 0 0 2 1.83h.44a2 2 0 0 0 2-1.83c0-.12.05-.24.12-.33l.96-1.07a8 8 0 0 0 2.44-1.07l1.9.63a2 2 0 0 0 2.53-1.94v-.56a2 2 0 0 0-1.53-1.94l-1.9-.63a8.1 8.1 0 0 0 0-2.5l1.9-.63A2 2 0 0 0 22.17 8.78v-.56a2 2 0 0 0-2.53-1.94l-1.9.63a8 8 0 0 0-2.44-1.07L14.34 4.16c-.07-.09-.12-.21-.12-.33A2 2 0 0 0 12.22 2z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                </button>
+            </div>
+            <button class="top-icon" onclick="logout()" title="Logout">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+                </svg>
+            </button>
+        </div>
+        <div id="userInfo" style="display:none;"></div>
+        
+        <div class="card">
             <div class="logo">
-                <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                 </svg>
-                <h1 class="logo-text">Socratic Parent</h1>
+                <h1>Socratic Parent</h1>
+                <p>The Anti-Homework-Solver</p>
             </div>
-            <div class="header-right">
-                <span id="userInfo" class="user-info"></span>
-                <span id="usageInfo" class="usage-info">3 scans left</span>
-                <button id="upgradeBtn" class="btn-upgrade" style="display:none;">⭐ Upgrade to Premium</button>
-                <button onclick="logout()" class="logout-btn">Logout</button>
-            </div>
-            <p class="tagline">The Anti-Homework-Solver for the 2026 AI-Saturated Era</p>
-        </header>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Upload Section -->
-            <section id="uploadSection" class="upload-section">
-                <div class="upload-card">
-                    <div class="upload-header">
-                        <h2>Upload Your Child's Homework</h2>
-                        <p class="subtitle">Snap a photo or drag & drop an image</p>
-                    </div>
-
-                    <!-- Grade Level Selection -->
-                    <div class="grade-selector">
-                        <label for="gradeSelect">Grade Level (Optional):</label>
-                        <select id="gradeSelect" class="grade-select">
-                            <option value="">Select grade...</option>
-                            <option value="K-2">Kindergarten - 2nd Grade</option>
-                            <option value="3-5">3rd - 5th Grade</option>
-                            <option value="6-8">6th - 8th Grade (Middle School)</option>
-                            <option value="9-12">9th - 12th Grade (High School)</option>
-                        </select>
-                    </div>
-
-                    <!-- Upload Area -->
-                    <div id="dropZone" class="drop-zone">
-                        <input type="file" id="fileInput" accept="image/*" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:5;">
-                        <div class="drop-zone-content">
-                            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-                            </svg>
-                            <p class="drop-text">Drag & drop an image here</p>
-                            <p class="drop-text-or">or</p>
-                            <button id="browseBtn" class="btn btn-primary" type="button">Browse Files</button>
-                        </div>
-                        <div id="imagePreview" class="image-preview hidden">
-                            <img id="previewImg" alt="Homework preview">
-                            <button id="removeBtn" class="btn-remove">✕</button>
-                        </div>
-                    </div>
-
-                    <!-- Camera Capture -->
-                    <div class="camera-section">
-                        <button id="cameraBtn" class="btn btn-secondary">
-                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                                <circle cx="12" cy="13" r="4"/>
-                            </svg>
-                            Take Photo
-                        </button>
-                    </div>
-
-                    <!-- Analyze Button -->
-                    <button id="analyzeBtn" class="btn btn-analyze hidden">
-                        Analyze Homework
-                    </button>
+            
+            <section id="uploadSection">
+                <h2 class="form-title">Upload Homework</h2>
+                <p class="form-sub">Take a photo or drag and drop an image</p>
+                
+                <!-- Trial upgrade banner (hidden by default, shown by JS for trial users) -->
+                <div id="trialUpgradeBanner" style="display: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 16px; border-radius: 10px; margin-bottom: 18px; text-align: center; font-size: 0.9rem; line-height: 1.4;">
+                    <span style="opacity: 0.95;">🎁 Try free, then upgrade! </span>
+                    <a href="/login.html" style="color: white; font-weight: 600; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 2px;">Create account</a>
+                    <span style="opacity: 0.95;"> for 3 daily scans</span>
                 </div>
-
-                <!-- Empty State Message -->
-                <div class="empty-state">
-                    <p class="empty-text">✨ Waiting for your child's genius...</p>
+                
+                <label for="gradeSelect">Grade Level (Optional)</label>
+                <div class="select-wrapper">
+                    <select id="gradeSelect">
+                        <option value="">Select grade...</option>
+                        <option value="K-2">K - 2nd Grade</option>
+                        <option value="3-5">3rd - 5th Grade</option>
+                        <option value="6-8">6th - 8th Grade</option>
+                        <option value="9-12">9th - 12th Grade</option>
+                    </select>
                 </div>
+                
+                <div id="dropZone" class="dropzone">
+                    <input type="file" id="fileInput" accept="image/*">
+                    <div class="drop-zone-content">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                        </svg>
+                        <p>Drop image here</p>
+                        <small>or tap to browse</small>
+                    </div>
+                </div>
+                
+                <div id="imagePreview" class="preview hidden">
+                    <img id="previewImg" alt="Preview">
+                    <button id="removeBtn" class="remove">×</button>
+                </div>
+                
+                <button id="cameraBtn" class="btn btn-secondary camera-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                        <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                    Take Photo
+                </button>
+                
+                <button id="analyzeBtn" class="btn btn-primary hidden">🔍 Analyze Homework</button>
             </section>
-
-            <!-- Loading State -->
-            <section id="loadingSection" class="loading-section hidden">
-                <div class="loading-card">
-                    <div class="loader"></div>
-                    <p class="loading-text">Analyzing homework...</p>
-                    <p class="loading-subtext">Preparing your coaching script</p>
-                </div>
+            
+            <section id="loadingSection" class="loading hidden">
+                <div class="spinner"></div>
+                <h3>Analyzing homework...</h3>
+                <p>Creating your coaching script</p>
             </section>
-
-            <!-- Results Section -->
-            <section id="resultsSection" class="results-section hidden">
-                <div class="results-card">
-                    <div class="results-header">
-                        <h2>Your Coaching Script</h2>
-                        <p class="results-subtitle">Read this before speaking with your child</p>
+            
+            <section id="resultsSection" class="hidden" style="position: relative;">
+                <div class="results-head">
+                    <h2>Your Coaching Script</h2>
+                    <p>Read this before speaking with your child</p>
+                </div>
+                
+                <div class="badge">📚 <span id="subjectText">Mathematics</span></div>
+                
+                <div class="q-item spark">
+                    <div class="q-label spark">🌟 The Spark</div>
+                    <div id="foundationQuestion" class="q-text"></div>
+                </div>
+                
+                <div class="q-item climb">
+                    <div class="q-label climb">🧗 The Climb</div>
+                    <div id="bridgeQuestion" class="q-text"></div>
+                </div>
+                
+                <div class="q-item summit">
+                    <div class="q-label summit">⛰️ The Summit</div>
+                    <div id="masteryQuestion" class="q-text"></div>
+                </div>
+                
+                <div class="tip">
+                    <div class="tip-label">💡 Teacher Tip</div>
+                    <p id="behavioralTip" class="tip-text"></p>
+                </div>
+                
+                <div class="actions">
+                    <button id="showExampleBtn" class="btn btn-outline">📚 Example</button>
+                    <button id="showStepsBtn" class="btn btn-outline">📝 Steps</button>
+                    <button id="newAnalysisBtn" class="btn btn-primary full">🔄 Analyze Another</button>
+                </div>
+                
+                <div id="exampleSection" class="expand hidden">
+                    <div class="expand-head">📚 Example Approach</div>
+                    <div class="expand-warn"><strong>⚠️ For Parents Only:</strong> Do not read this to your child.</div>
+                    <div id="exampleContent" class="expand-content"></div>
+                </div>
+                
+                <div id="stepsSection" class="expand hidden">
+                    <div class="expand-head">📝 Solution Steps</div>
+                    <div class="expand-warn"><strong>⚠️ Last Resort:</strong> Try Socratic questions first.</div>
+                    <div id="stepsContainer"></div>
+                    <div class="steps-btns">
+                        <button id="nextStepBtn" class="btn btn-primary">👉 Next Step</button>
+                        <button id="resetStepsBtn" class="btn btn-secondary hidden">🔄 Reset</button>
                     </div>
-
-                    <!-- Subject Badge -->
-                    <div class="subject-badge">
-                        <span id="subjectText">Mathematics</span>
-                    </div>
-
-                    <!-- Questions -->
-                    <div class="questions-container">
-                        <div class="question-card spark">
-                            <div class="question-header">
-                                <span class="question-icon">🌟</span>
-                                <h3>THE SPARK</h3>
-                                <p class="question-subtitle">Activate what they know</p>
-                            </div>
-                            <p id="foundationQuestion" class="question-text"></p>
-                        </div>
-
-                        <div class="question-card climb">
-                            <div class="question-header">
-                                <span class="question-icon">🧗</span>
-                                <h3>THE CLIMB</h3>
-                                <p class="question-subtitle">Point to the roadblock</p>
-                            </div>
-                            <p id="bridgeQuestion" class="question-text"></p>
-                        </div>
-
-                        <div class="question-card summit">
-                            <div class="question-header">
-                                <span class="question-icon">⛰️</span>
-                                <h3>THE SUMMIT</h3>
-                                <p class="question-subtitle">Verify independence</p>
-                            </div>
-                            <p id="masteryQuestion" class="question-text"></p>
-                        </div>
-                    </div>
-
-                    <!-- Behavioral Tip -->
-                    <div class="tip-card">
-                        <div class="tip-header">
-                            <span class="tip-icon">💡</span>
-                            <h3>Teacher Tip</h3>
-                        </div>
-                        <p id="behavioralTip" class="tip-text"></p>
-                    </div>
-                    <!-- Paywall Overlay -->
-                    <div id="paywallOverlay" class="paywall-overlay hidden">
-                        <div class="paywall-content">
-                            <h2>🔒 Unlock Full Solution</h2>
-                            <p>You've used all your 3 free scans today!</p>
-                            <p class="paywall-subtitle">Get unlimited access with Premium</p>
-                            <ul class="paywall-features">
-                                <li>✨ Unlimited homework scans</li>
-                                <li>📚 Full step-by-step solutions</li>
-                                <li>💡 Teacher tips & guidance</li>
-                                <li>🎯 Priority support</li>
-                            </ul>
-                            <button id="paywallUpgradeBtn" class="btn-upgrade-large">
-                                ⭐ Upgrade to Premium - $9.99/month
-                            </button>
-                            <p class="paywall-note">Cancel anytime. No long-term commitment.</p>
-                        </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="action-buttons">
-                        <button id="showExampleBtn" class="btn btn-outline">
-                            💡 Need Help? Show Example Approach
-                        </button>
-                        <button id="showStepsBtn" class="btn btn-outline">
-                            📝 Show Solution Steps
-                        </button>
-                        <button id="newAnalysisBtn" class="btn btn-solid">
-                            Analyze Another
-                        </button>
-                    </div>
-                    
-                    <!-- Example Approach (Hidden by default) -->
-                    <div id="exampleSection" class="example-section hidden">
-                        <div class="example-card">
-                            <div class="example-header">
-                                <span class="example-icon">📚</span>
-                                <h3>Example Approach for Parents</h3>
-                            </div>
-                            <div class="example-note">
-                                <strong>⚠️ Parent Mode:</strong> This section helps YOU understand the concept better. 
-                                DO NOT read this directly to your child. Use the Socratic questions above instead.
-                            </div>
-                            <div id="exampleContent" class="example-content">
-                                <p><strong>Concept Overview:</strong> The problem requires understanding the relationship between the known and unknown elements.</p>
-                                <p><strong>Common Mistakes:</strong> Students often skip foundational steps or rush to the answer.</p>
-                                <p><strong>Guiding Principle:</strong> Break the problem into smaller parts and verify each step.</p>
-                                <p><strong>What NOT to say:</strong> Never give the final answer. Let them discover it through questioning.</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Solution Steps (Progressive Reveal) -->
-                    <div id="stepsSection" class="steps-section hidden">
-                        <div class="steps-card">
-                            <div class="steps-header">
-                                <span class="steps-icon">📝</span>
-                                <h3>Solution Steps (Progressive Reveal)</h3>
-                            </div>
-                            <div class="steps-note">
-                                <strong>⚠️ Last Resort:</strong> Use this only after trying the Socratic questions. 
-                                Click "Next Step" to reveal one step at a time.
-                            </div>
-                            <div id="stepsContainer" class="steps-container"></div>
-                            <div class="steps-controls">
-                                <button id="nextStepBtn" class="btn btn-primary">
-                                    👉 Reveal Next Step
-                                </button>
-                                <button id="resetStepsBtn" class="btn btn-secondary hidden">
-                                    🔄 Reset Steps
-                                </button>
-                            </div>
-                        </div>
+                </div>
+                
+                <div id="paywallOverlay" class="paywall hidden">
+                    <div class="paywall-box">
+                        <h2>🔒 Limit Reached</h2>
+                        <p>You have used your 3 free scans today!</p>
+                        <p class="paywall-sub">Unlock unlimited access</p>
+                        <ul class="paywall-list">
+                            <li>✨ Unlimited homework scans</li>
+                            <li>📚 Full step-by-step solutions</li>
+                            <li>💡 Teacher tips and guidance</li>
+                        </ul>
+                        <button id="paywallUpgradeBtn" class="paywall-btn">⭐ Upgrade - $9.99/mo</button>
+                        <p class="paywall-note">Cancel anytime</p>
                     </div>
                 </div>
             </section>
-
-            <!-- Error State -->
-            <section id="errorSection" class="error-section hidden">
-                <div class="error-card">
-                    <div class="error-icon">⚠️</div>
-                    <h3 class="error-title">Oops! Something went wrong</h3>
-                    <p id="errorMessage" class="error-message"></p>
-                    <button id="retryBtn" class="btn btn-secondary">Try Again</button>
-                </div>
+            
+            <section id="errorSection" class="error hidden">
+                <div class="error-icon">⚠️</div>
+                <h3>Something went wrong</h3>
+                <p id="errorMessage"></p>
+                <button id="retryBtn" class="btn btn-secondary">Try Again</button>
             </section>
-        </main>
-
-        <!-- Footer -->
+        </div>
+        
         <footer class="footer">
-            <p class="footer-text">
-                <strong>Privacy First:</strong> Images are processed securely and never stored.
-            </p>
-            <p class="footer-subtext">
-                Turning homework from conflict into connection. © 2026 Socratic Parent
-            </p>
+            <p><strong>Privacy First:</strong> Images processed securely, never stored.</p>
+            <p>© 2025 Socratic Parent</p>
         </footer>
     </div>
-
-    <!-- Camera Modal -->
+    
     <div id="cameraModal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
+        <div class="modal-box">
+            <div class="modal-head">
                 <h3>Take a Photo</h3>
-                <button id="closeCameraBtn" class="btn-close">✕</button>
+                <button id="closeCameraBtn" class="modal-close">×</button>
             </div>
-            <video id="cameraStream" class="camera-stream" autoplay playsinline></video>
+            <video id="cameraStream" autoplay playsinline></video>
             <canvas id="cameraCanvas" hidden></canvas>
-            <div class="modal-actions">
+            <div class="modal-btns">
                 <button id="captureBtn" class="btn btn-primary">Capture</button>
                 <button id="cancelCameraBtn" class="btn btn-secondary">Cancel</button>
             </div>
         </div>
     </div>
-
-    <script src="/static/app.js?v=8"></script>
+    
+    <script src="/static/app.js?v=18"></script>
 </body>
 </html>

@@ -98,13 +98,19 @@ async function checkAuth() {
         const userInfoEl = document.getElementById('userInfo');
         const usageInfoEl = document.getElementById('usageInfo');
         const upgradeBtn = document.getElementById('upgradeBtn');
+        const settingsIcon = document.querySelector('.settings-icon');
         const logoutBtn = document.querySelector('.logout-btn');
         
         if (userInfoEl) userInfoEl.textContent = '🎁 Free Trial';
-        if (usageInfoEl) usageInfoEl.textContent = hasUsedTrial() ? '0 trials left' : '1 free trial';
+        if (usageInfoEl) usageInfoEl.style.display = 'none';
         if (upgradeBtn) upgradeBtn.style.display = 'none';
+        if (settingsIcon) settingsIcon.style.display = 'none';
         if (logoutBtn) logoutBtn.textContent = 'Sign Up';
         if (logoutBtn) logoutBtn.onclick = () => window.location.href = '/login.html';
+        
+        // Show trial upgrade banner
+        const trialBanner = document.getElementById('trialUpgradeBanner');
+        if (trialBanner) trialBanner.style.display = 'block';
         
         // Add home button for trial users
         const headerRight = document.querySelector('.header-right');
@@ -317,75 +323,272 @@ function showPaywall(paywallData) {
 function showTrialExhaustedModal() {
     showSection('upload');
     
-    // Create modal if it doesn't exist
-    let modal = document.getElementById('trialExhaustedModal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'trialExhaustedModal';
-        modal.className = 'trial-modal-overlay';
-        modal.innerHTML = `
-            <div class="trial-modal-content">
-                <div class="trial-modal-icon">🎯</div>
-                <h2>You've Used Your Free Trial!</h2>
-                <p>You've seen how Socratic Parent works. Now unlock unlimited access!</p>
-                <ul class="trial-modal-features">
-                    <li>✅ 3 free scans a day</li>
-                    <li>✅ Full coaching scripts</li>
-                    <li>✅ All subjects supported</li>
-                    <li>✅ Step-by-step solutions</li>
-                </ul>
-                <button class="trial-modal-btn primary" onclick="window.location.href='/login.html'">
-                    📧 Create Free Account
-                </button>
-                <button class="trial-modal-btn secondary" onclick="closeTrialModal()">
-                    Maybe Later
-                </button>
-                <p class="trial-modal-note">No credit card required</p>
-            </div>
-        `;
-        document.body.appendChild(modal);
+    // Remove any existing modal first
+    const existingModal = document.getElementById('trialExhaustedModal');
+    if (existingModal) {
+        existingModal.remove();
     }
     
-    modal.classList.add('show');
+    // Create fresh modal with absolute positioning
+    const modal = document.createElement('div');
+    modal.id = 'trialExhaustedModal';
+    modal.style.cssText = `
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background: rgba(30, 41, 59, 0.8) !important;
+        backdrop-filter: blur(10px) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        z-index: 999999 !important;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        margin: 0 !important;
+        padding: 20px !important;
+        box-sizing: border-box !important;
+    `;
+    
+    modal.innerHTML = `
+        <div class="trial-modal-content" style="
+            background: white !important;
+            border-radius: 24px !important;
+            padding: 48px 40px !important;
+            max-width: 440px !important;
+            width: 90% !important;
+            max-height: 90vh !important;
+            text-align: center !important;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25), 0 0 1px rgba(0, 0, 0, 0.1) !important;
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative !important;
+            margin: 0 auto !important;
+            overflow-y: auto !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+        ">
+            <div class="trial-modal-icon" style="font-size: 4rem; margin-bottom: 20px; line-height: 1;">🎯</div>
+            <h2 style="color: #1e293b; margin-bottom: 12px; font-size: 1.75rem; font-weight: 700; line-height: 1.3;">You've Used Your Free Trial!</h2>
+            <p style="color: #64748b; margin-bottom: 32px; font-size: 1.05rem; line-height: 1.6;">You've seen how Socratic Parent works. Now unlock unlimited access!</p>
+            <ul style="list-style: none; padding: 0; margin: 28px 0 32px 0; text-align: left;">
+                <li style="padding: 10px 0; color: #1e293b; font-size: 1rem; display: flex; align-items: center; gap: 10px;">
+                    <span style="color: #10b981; font-size: 1.2rem;">✅</span>
+                    <span style="font-weight: 500;">3 free scans a day</span>
+                </li>
+                <li style="padding: 10px 0; color: #1e293b; font-size: 1rem; display: flex; align-items: center; gap: 10px;">
+                    <span style="color: #10b981; font-size: 1.2rem;">✅</span>
+                    <span style="font-weight: 500;">Full coaching scripts</span>
+                </li>
+                <li style="padding: 10px 0; color: #1e293b; font-size: 1rem; display: flex; align-items: center; gap: 10px;">
+                    <span style="color: #10b981; font-size: 1.2rem;">✅</span>
+                    <span style="font-weight: 500;">All subjects supported</span>
+                </li>
+                <li style="padding: 10px 0; color: #1e293b; font-size: 1rem; display: flex; align-items: center; gap: 10px;">
+                    <span style="color: #10b981; font-size: 1.2rem;">✅</span>
+                    <span style="font-weight: 500;">Step-by-step solutions</span>
+                </li>
+            </ul>
+            <button onclick="window.location.href='/login.html'" style="
+                display: block;
+                width: 100%;
+                padding: 16px 24px;
+                margin: 0 0 12px 0;
+                border: none;
+                border-radius: 12px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                font-size: 1.05rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+                font-family: inherit;
+            " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(102, 126, 234, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.3)';">
+                📧 Create Free Account
+            </button>
+            <button onclick="closeTrialModal()" style="
+                display: block;
+                width: 100%;
+                padding: 14px 24px;
+                margin: 0 0 20px 0;
+                border: 2px solid #e2e8f0;
+                border-radius: 12px;
+                background: white;
+                color: #64748b;
+                font-size: 0.95rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                font-family: inherit;
+            " onmouseover="this.style.borderColor='#cbd5e1'; this.style.color='#475569';" onmouseout="this.style.borderColor='#e2e8f0'; this.style.color='#64748b';">
+                Maybe Later
+            </button>
+            <p style="color: #94a3b8; font-size: 0.9rem; margin: 0; line-height: 1.4;">No credit card required</p>
+        </div>
+    `;
+    
+    // Append directly to document.documentElement to bypass all containers
+    document.documentElement.appendChild(modal);
+    
+    // Force reflow then show
+    setTimeout(() => {
+        modal.style.opacity = '1';
+        const content = modal.querySelector('.trial-modal-content');
+        if (content) {
+            content.style.transform = 'scale(1)';
+        }
+    }, 10);
 }
 
 function showSignupPromptModal() {
-    // Create modal if it doesn't exist
-    let modal = document.getElementById('signupPromptModal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'signupPromptModal';
-        modal.className = 'trial-modal-overlay';
-        modal.innerHTML = `
-            <div class="trial-modal-content">
-                <div class="trial-modal-icon">🎉</div>
-                <h2>That Was Your Free Preview!</h2>
-                <p>Love it? Create a free account to keep using Socratic Parent!</p>
-                <ul class="trial-modal-features">
-                    <li>✅ 3 free scans a day</li>
-                    <li>✅ Works on any device</li>
-                </ul>
-                <button class="trial-modal-btn primary" onclick="window.location.href='/login.html'">
-                    🚀 Create Free Account
-                </button>
-                <button class="trial-modal-btn secondary" onclick="closeTrialModal()">
-                    Keep Browsing Results
-                </button>
-                <p class="trial-modal-note">Takes 10 seconds • No credit card</p>
-            </div>
-        `;
-        document.body.appendChild(modal);
+    // Remove any existing modal first
+    const existingModal = document.getElementById('signupPromptModal');
+    if (existingModal) {
+        existingModal.remove();
     }
     
-    modal.classList.add('show');
+    // Create fresh modal with inline styles
+    const modal = document.createElement('div');
+    modal.id = 'signupPromptModal';
+    modal.style.cssText = `
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        background: rgba(30, 41, 59, 0.8) !important;
+        backdrop-filter: blur(10px) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        z-index: 999999 !important;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        margin: 0 !important;
+        padding: 20px !important;
+        box-sizing: border-box !important;
+    `;
+    
+    modal.innerHTML = `
+        <div class="trial-modal-content" style="
+            background: white !important;
+            border-radius: 24px !important;
+            padding: 48px 40px !important;
+            max-width: 440px !important;
+            width: 90% !important;
+            max-height: 90vh !important;
+            text-align: center !important;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25), 0 0 1px rgba(0, 0, 0, 0.1) !important;
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative !important;
+            margin: 0 auto !important;
+            overflow-y: auto !important;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+        ">
+            <div class="trial-modal-icon" style="font-size: 4rem; margin-bottom: 20px; line-height: 1;">🎉</div>
+            <h2 style="color: #1e293b; margin-bottom: 12px; font-size: 1.75rem; font-weight: 700; line-height: 1.3;">That Was Your Free Preview!</h2>
+            <p style="color: #64748b; margin-bottom: 32px; font-size: 1.05rem; line-height: 1.6;">Love it? Create a free account to keep using Socratic Parent!</p>
+            <ul style="list-style: none; padding: 0; margin: 28px 0 32px 0; text-align: left;">
+                <li style="padding: 10px 0; color: #1e293b; font-size: 1rem; display: flex; align-items: center; gap: 10px;">
+                    <span style="color: #10b981; font-size: 1.2rem;">✅</span>
+                    <span style="font-weight: 500;">3 free scans every day</span>
+                </li>
+                <li style="padding: 10px 0; color: #1e293b; font-size: 1rem; display: flex; align-items: center; gap: 10px;">
+                    <span style="color: #10b981; font-size: 1.2rem;">✅</span>
+                    <span style="font-weight: 500;">Step-by-step coaching scripts</span>
+                </li>
+                <li style="padding: 10px 0; color: #1e293b; font-size: 1rem; display: flex; align-items: center; gap: 10px;">
+                    <span style="color: #10b981; font-size: 1.2rem;">✅</span>
+                    <span style="font-weight: 500;">All subjects supported</span>
+                </li>
+                <li style="padding: 10px 0; color: #1e293b; font-size: 1rem; display: flex; align-items: center; gap: 10px;">
+                    <span style="color: #10b981; font-size: 1.2rem;">✅</span>
+                    <span style="font-weight: 500;">Never store your homework photos</span>
+                </li>
+            </ul>
+            <button onclick="window.location.href='/login.html'" style="
+                display: block;
+                width: 100%;
+                padding: 16px 24px;
+                margin: 0 0 12px 0;
+                border: none;
+                border-radius: 12px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                font-size: 1.05rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+                font-family: inherit;
+            " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(102, 126, 234, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.3)';">
+                🚀 Create Free Account
+            </button>
+            <button onclick="closeTrialModal()" style="
+                display: block;
+                width: 100%;
+                padding: 14px 24px;
+                margin: 0 0 20px 0;
+                border: 2px solid #e2e8f0;
+                border-radius: 12px;
+                background: white;
+                color: #64748b;
+                font-size: 0.95rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                font-family: inherit;
+            " onmouseover="this.style.borderColor='#cbd5e1'; this.style.color='#475569';" onmouseout="this.style.borderColor='#e2e8f0'; this.style.color='#64748b';">
+                Keep Browsing Results
+            </button>
+            <p style="color: #94a3b8; font-size: 0.9rem; margin: 0; line-height: 1.4;">Takes 10 seconds • No credit card</p>
+        </div>
+    `;
+    
+    // Append directly to document.documentElement to bypass all containers
+    document.documentElement.appendChild(modal);
+    
+    // Force reflow then show
+    setTimeout(() => {
+        modal.style.opacity = '1';
+        const content = modal.querySelector('.trial-modal-content');
+        if (content) {
+            content.style.transform = 'scale(1)';
+        }
+    }, 10);
 }
 
 function closeTrialModal() {
     const exhaustedModal = document.getElementById('trialExhaustedModal');
     const promptModal = document.getElementById('signupPromptModal');
     
-    if (exhaustedModal) exhaustedModal.classList.remove('show');
-    if (promptModal) promptModal.classList.remove('show');
+    if (exhaustedModal) {
+        exhaustedModal.style.opacity = '0';
+        const content = exhaustedModal.querySelector('.trial-modal-content');
+        if (content) {
+            content.style.transform = 'scale(0.9)';
+        }
+        // Remove after animation
+        setTimeout(() => {
+            if (exhaustedModal.parentNode) {
+                exhaustedModal.parentNode.removeChild(exhaustedModal);
+            }
+        }, 300);
+    }
+    if (promptModal) {
+        promptModal.style.opacity = '0';
+        const promptContent = promptModal.querySelector('.trial-modal-content');
+        if (promptContent) {
+            promptContent.style.transform = 'scale(0.9)';
+        }
+        setTimeout(() => {
+            if (promptModal.parentNode) {
+                promptModal.parentNode.removeChild(promptModal);
+            }
+        }, 300);
+    }
 }
 
 // ===== DOM Elements =====
@@ -495,9 +698,11 @@ function handleFileSelect(file) {
 }
 
 // Browse button click - file input is now an overlay so this just prevents default
-elements.browseBtn.addEventListener('click', (e) => {
-    e.stopPropagation(); // Let the file input overlay handle it
-});
+if (elements.browseBtn) {
+    elements.browseBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Let the file input overlay handle it
+    });
+}
 
 // File input change
 elements.fileInput.addEventListener('change', (e) => {
@@ -890,13 +1095,40 @@ function renderStep(stepData, stepNumber) {
         stepContent = stepData.content || '';
     }
     
+    // Clean up title - remove redundant "Step X:" prefix if present
+    if (stepTitle) {
+        stepTitle = stepTitle.replace(/^Step\s*\d+\s*[:\-]\s*/i, '');
+    }
+    
+    // Check if this is a final answer step
+    const isFinalAnswer = stepTitle.toLowerCase().includes('final answer') || 
+                          stepTitle.toLowerCase().includes('conclusion') ||
+                          stepTitle.toLowerCase().includes('verify');
+    
     // Format math content
     const formattedContent = formatMathContent(stepContent);
     
+    // Extract final answer value if present - look for the answer in the content
+    let finalAnswerHtml = '';
+    if (isFinalAnswer && stepContent.toLowerCase().includes('final answer')) {
+        // Match patterns like "final answer is 9" or "final answer is: 9" 
+        // Avoid capturing LaTeX $ symbols
+        const answerMatch = stepContent.match(/final answer is[:\s]*\$?([^$\n.]+)/i);
+        if (answerMatch) {
+            let answer = answerMatch[1].trim();
+            // Clean up any remaining LaTeX or punctuation
+            answer = answer.replace(/\$/g, '').replace(/\\[a-z]+/gi, '').trim();
+            if (answer && answer.length < 20) {  // Sanity check
+                finalAnswerHtml = `<div class="final-answer">🎯 Final Answer<strong>${answer}</strong></div>`;
+            }
+        }
+    }
+    
     stepDiv.innerHTML = `
-        <div class="step-number">Step ${stepNumber}</div>
-        ${stepTitle ? `<div class="step-header"><strong>${stepTitle}</strong></div>` : ''}
+        <div class="step-num">Step ${stepNumber}</div>
+        ${stepTitle ? `<div class="step-title">${stepTitle}</div>` : ''}
         <div class="step-text">${formattedContent}</div>
+        ${finalAnswerHtml}
     `;
     elements.stepsContainer.appendChild(stepDiv);
     
