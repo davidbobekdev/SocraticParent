@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - Socratic Parent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+        
+        .contact-container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px 32px;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .logo h1 {
+            font-size: 2em;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+        
+        .logo p {
+            color: #64748b;
+            font-size: 1em;
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+            border: 1px solid #10b981;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .info-box p {
+            color: #065f46;
+            font-size: 0.95em;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        
+        .info-box strong {
+            color: #047857;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #334155;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .message {
+            padding: 14px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .message.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+        }
+        
+        .message.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        
+        .home-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 18px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9em;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
+            z-index: 100;
+        }
+        
+        .home-button:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .home-button span {
+            font-size: 1.1em;
+        }
+        
+        @media (max-width: 640px) {
+            .contact-container {
+                padding: 32px 24px;
+            }
+            
+            .logo h1 {
+                font-size: 1.75em;
+            }
+            
+            .home-button {
+                top: 12px;
+                left: 12px;
+                padding: 8px 14px;
+                font-size: 0.85em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Home Button -->
+    <a href="/" class="home-button" title="Back to Home">
+        <span>←</span> Home
+    </a>
+    
+    <div class="contact-container">
+        <div class="logo">
+            <h1>💬 Get in Touch</h1>
+            <p>We're here to help!</p>
+        </div>
+        
+        <div class="info-box">
+            <p><strong>Need help?</strong> Forgot your password? Have a question?</p>
+            <p>Send us a message and we'll get back to you within 24 hours.</p>
+            <p><strong>Email:</strong> david.bobek.business@gmail.com</p>
+        </div>
+        
+        <div id="statusMessage" class="message"></div>
+        
+        <form id="contactForm">
+            <div class="form-group">
+                <label for="name">Your Name</label>
+                <input type="text" id="name" placeholder="John Doe" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Your Email</label>
+                <input type="email" id="email" placeholder="your@email.com" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="subject">Subject</label>
+                <select id="subject" required>
+                    <option value="">Select a topic...</option>
+                    <option value="Password Reset">Password Reset</option>
+                    <option value="Technical Issue">Technical Issue</option>
+                    <option value="Billing Question">Billing Question</option>
+                    <option value="Feature Request">Feature Request</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="userMessage">Message</label>
+                <textarea id="userMessage" placeholder="Tell us how we can help..." required minlength="10"></textarea>
+            </div>
+            
+            <button type="submit" id="submitBtn">Send Message</button>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('contactForm');
+        const messageEl = document.getElementById('statusMessage');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        function showMessage(text, type) {
+            messageEl.textContent = text;
+            messageEl.className = `message ${type}`;
+            messageEl.style.display = 'block';
+            
+            // Scroll to message
+            messageEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                subject: document.getElementById('subject').value,
+                message: document.getElementById('userMessage').value
+            };
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+            
+            try {
+                const response = await fetch('/api/contact', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    showMessage('✅ Message sent! We\'ll get back to you within 24 hours.', 'success');
+                    form.reset();
+                } else {
+                    const data = await response.json();
+                    let errorMsg = 'An error occurred. Please try again.';
+                    
+                    // Handle FastAPI validation errors
+                    if (data.detail) {
+                        if (typeof data.detail === 'string') {
+                            errorMsg = data.detail;
+                        } else if (Array.isArray(data.detail)) {
+                            errorMsg = data.detail.map(err => err.msg).join(', ');
+                        }
+                    }
+                    
+                    showMessage(errorMsg, 'error');
+                }
+            } catch (error) {
+                showMessage('Connection failed. Please email us directly at david.bobek.business@gmail.com', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Send Message';
+            }
+        });
+    </script>
+</body>
+</html>
