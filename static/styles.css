@@ -10,6 +10,31 @@
     box-sizing: border-box;
 }
 
+/* Global KaTeX overflow fix - CRITICAL: Never cut off formulas */
+.katex,
+.katex-display,
+.katex-html {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch;
+}
+
+.katex-display {
+    font-size: 0.85em !important;
+}
+
+@media (min-width: 640px) {
+    .katex-display {
+        font-size: 1em !important;
+    }
+}
+
+html {
+    overflow-x: hidden;
+    width: 100%;
+}
+
 :root {
     /* Design Tokens (2026 UI/UX Guidelines) */
     --primary-color: #4F46E5; /* Deep Indigo - Trust */
@@ -70,6 +95,8 @@ body {
     font-size: var(--font-size-base);
     min-height: 100vh;
     position: relative;
+    overflow-x: hidden;
+    width: 100%;
 }
 
 body::before {
@@ -90,9 +117,11 @@ body::before {
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: var(--spacing-sm);
+    padding: 0.5rem;
     position: relative;
     z-index: 1;
+    width: 100%;
+    overflow-x: hidden;
 }
 
 @media (min-width: 640px) {
@@ -754,10 +783,12 @@ body::before {
     background: linear-gradient(135deg, var(--surface) 0%, #faf5ff 100%);
     border-left: 4px solid var(--primary-color);
     border-radius: var(--radius-lg);
-    padding: 1rem;
+    padding: 0.75rem;
     box-shadow: var(--shadow-sm);
     transition: transform var(--transition-fast);
     animation: fadeIn var(--transition-slow) both;
+    overflow-x: auto;
+    overflow-y: visible;
 }
 
 @media (min-width: 640px) {
@@ -850,32 +881,50 @@ body::before {
 }
 
 .question-text {
-    font-size: 1rem;
-    line-height: 1.7;
+    font-size: 0.95rem;
+    line-height: 1.6;
     color: var(--text-primary);
     letter-spacing: 0.01em;
     overflow-wrap: break-word;
     word-break: break-word;
+    max-width: 100%;
+    overflow-x: auto;
 }
 
 @media (min-width: 640px) {
     .question-text {
         font-size: var(--font-size-lg);
         line-height: 1.8;
+        overflow-x: visible;
     }
 }
 
 .question-text .katex {
-    font-size: 1.1em;
+    font-size: 1em;
     color: var(--primary-color);
+    max-width: 100%;
 }
 
 .question-text .katex-display {
     margin: var(--spacing-md) 0;
-    padding: var(--spacing-sm);
+    padding: 0.5rem;
     background: rgba(99, 102, 241, 0.05);
     border-radius: var(--radius-sm);
     border-left: 3px solid var(--primary-color);
+    overflow-x: auto;
+    overflow-y: visible;
+    max-width: 100%;
+    font-size: 0.9em;
+}
+
+@media (min-width: 640px) {
+    .question-text .katex {
+        font-size: 1.1em;
+    }
+    .question-text .katex-display {
+        padding: var(--spacing-sm);
+        font-size: 1em;
+    }
 }
 
 .question-text p .katex {
@@ -1135,20 +1184,33 @@ body::before {
 }
 
 .example-content .katex {
-    font-size: 1.1em;
+    font-size: 1em;
     color: var(--primary-color);
+    max-width: 100%;
 }
 
 .example-content .katex-display {
     margin: 1rem 0;
-    padding: 1rem;
+    padding: 0.75rem;
     background: linear-gradient(135deg, #eff6ff 0%, #e0f2fe 100%);
     border-radius: var(--radius-md);
     border-left: 4px solid var(--primary-color);
     box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);
+    overflow-x: auto;
+    overflow-y: visible;
+    max-width: 100%;
+    font-size: 0.9em;
 }
 
 @media (min-width: 640px) {
+    .example-content .katex {
+        font-size: 1.1em;
+    }
+    .example-content .katex-display {
+        margin: var(--spacing-md) 0;
+        padding: var(--spacing-md);
+        font-size: 1em;
+    }
     .example-content .katex-display {
         margin: var(--spacing-md) 0;
         padding: var(--spacing-md);
@@ -1362,14 +1424,29 @@ body::before {
 }
 
 .step-text .katex {
-    font-size: 1.1em;
+    font-size: 1em;
+    max-width: 100%;
 }
 
 .step-text .katex-display {
     margin: var(--spacing-md) 0;
-    padding: var(--spacing-sm);
+    padding: 0.5rem;
     background: #f8f9fa;
     border-radius: var(--radius-sm);
+    overflow-x: auto;
+    overflow-y: visible;
+    max-width: 100%;
+    font-size: 0.9em;
+}
+
+@media (min-width: 640px) {
+    .step-text .katex {
+        font-size: 1.1em;
+    }
+    .step-text .katex-display {
+        padding: var(--spacing-sm);
+        font-size: 1em;
+    }
 }
 
 .steps-controls {
@@ -1391,6 +1468,63 @@ body::before {
     font-weight: 600;
     margin-top: var(--spacing-md);
     animation: fadeIn var(--transition-normal);
+}
+
+/* Final Answer Display */
+.final-answer {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    color: white;
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    text-align: center;
+    margin-top: var(--spacing-md);
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+    animation: finalAnswerReveal 0.6s ease-out;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+@keyframes finalAnswerReveal {
+    0% {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.final-answer strong {
+    display: block;
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-top: 0.5rem;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    letter-spacing: 0.02em;
+    color: white;
+}
+
+@media (min-width: 640px) {
+    .final-answer {
+        padding: 2rem;
+    }
+    
+    .final-answer strong {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .final-answer {
+        padding: 1.25rem;
+    }
+    
+    .final-answer strong {
+        font-size: 2rem;
+    }
 }
 
 /* ===== Error Section ===== */
