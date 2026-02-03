@@ -912,12 +912,12 @@ async def log_analytics_event(
         
         # In production, you'd send this to analytics service (Google Analytics, Mixpanel, etc.)
         # For now, just log to console
-        logger.info(f"📊 Analytics: {username} - {event_name} - {data.get('properties', {})}")
+        print(f"📊 Analytics: {username} - {event_name} - {data.get('properties', {})}")
         
         return {"status": "logged"}
     except Exception as e:
         # Never fail the request
-        logger.debug(f"Analytics logging failed: {e}")
+        print(f"Analytics logging failed: {e}")
         return {"status": "ignored"}
 
 # Contact Form Endpoint

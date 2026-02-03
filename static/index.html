@@ -261,26 +261,48 @@
         @media (max-width: 400px) { .actions { grid-template-columns: 1fr; } }
         @media (min-width: 768px) {
             body { padding: 24px; display: flex; align-items: flex-start; justify-content: center; }
-            .app { max-width: 520px; }
-            .card { padding: 32px; border-radius: 24px; }
-            .logo svg { display: block; width: 48px; height: 48px; margin-bottom: 10px; }
-            .logo { margin-bottom: 28px; }
-            .logo h1 { font-size: 1.8rem; }
+            .app { max-width: 700px; }
+            .card { padding: 40px 56px; border-radius: 24px; }
+            label { font-size: 0.95rem; margin-bottom: 8px; font-weight: 700; }
+            select { padding: 15px 40px 15px 16px; font-size: 1rem; }
+            .btn { padding: 15px; font-size: 1rem; font-weight: 700; }
+            .logo svg { display: block; width: 52px; height: 52px; margin-bottom: 12px; }
+            .logo { margin-bottom: 32px; }
+            .logo h1 { font-size: 1.9rem; }
             .logo p { font-size: 0.9rem; margin-top: 4px; }
-            .form-title { font-size: 1.25rem; margin-bottom: 8px; }
+            .form-title { font-size: 1.25rem; margin-bottom: 10px; font-weight: 800; }
             .form-sub { margin-bottom: 20px; font-size: 1rem; }
             .top-bar { padding: 8px 4px; margin-bottom: 12px; }
             .top-icon { width: 40px; height: 40px; }
             .top-icon svg { width: 20px; height: 20px; }
-            .dropzone { padding: 36px 20px; border-radius: 16px; }
-            .results-head { margin-bottom: 24px; padding-bottom: 20px; }
+            .dropzone { padding: 42px 28px; border-radius: 16px; }
+            .dropzone svg { width: 48px; height: 48px; margin-bottom: 12px; }
+            .dropzone p { font-size: 1rem; }
+            .dropzone small { font-size: 0.9rem; }
+            .results-head { margin-bottom: 24px; padding-bottom: 18px; }
+            .results-head h2 { font-size: 1.35rem; }
+            .results-head p { font-size: 0.95rem; }
+            .badge { font-size: 0.85rem; padding: 9px 18px; margin-bottom: 24px; }
             .step-item { padding: 16px 0 16px 20px; margin-left: 8px; }
-            .step-text { line-height: 1.8; }
+            .step-text { line-height: 1.7; font-size: 0.98rem; }
             .step-text p { margin-bottom: 14px; }
-            .step-text ul, .step-text ol { margin: 16px 0 16px 8px; padding-left: 20px; }
-            .step-text ol > li { padding-left: 32px; margin-bottom: 16px; }
-            .step-text ul > li { margin-bottom: 12px; padding-left: 8px; }
-            .katex-display { margin: 16px 0; padding: 16px; border-radius: 12px; }
+            .step-text ul, .step-text ol { margin: 14px 0 14px 8px; padding-left: 20px; }
+            .step-text ol > li { padding-left: 32px; margin-bottom: 14px; }
+            .step-text ul > li { margin-bottom: 11px; padding-left: 8px; }
+            .q-text { font-size: 1rem; }
+            .q-label { font-size: 0.75rem; font-weight: 700; letter-spacing: 1.5px; }
+            .q-text p { margin-bottom: 12px; }
+            .q-text ul, .q-text ol { margin: 12px 0 12px 20px; }
+            .q-text li { margin-bottom: 8px; }
+            .q-item { padding: 16px 16px 16px 20px; margin-bottom: 20px; }
+            .tip { padding: 16px 20px; margin: 20px 0; font-size: 0.97rem; }
+            .tip-label { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+            .tip-text { color: #78350f; line-height: 1.6; }
+            .expand-head { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; margin-bottom: 16px; }
+            .expand-warn { font-size: 0.85rem; padding: 12px 16px; }
+            .expand-content { font-size: 0.98rem; line-height: 1.7; }
+            .katex-display { margin: 18px 0; padding: 18px; border-radius: 12px; }
+        }
         }
         @media (min-width: 1024px) {
             body { align-items: center; min-height: 100vh; }
