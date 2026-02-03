@@ -109,7 +109,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 60px 20px 80px;
+            padding: 60px 20px 120px;
             position: relative;
             overflow: hidden;
         }
@@ -124,6 +124,18 @@
             background: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
                         radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
             pointer-events: none;
+        }
+        
+        /* Wave divider for smooth transition */
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background: #f8fafc;
+            clip-path: ellipse(100% 100% at 50% 100%);
         }
         
         .hero-content {
@@ -153,6 +165,20 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Shimmer effect on badge */
+        .social-proof-badge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 3s ease-in-out infinite;
         }
         
         .badge-dot {
@@ -170,6 +196,26 @@
         @keyframes float {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-10px); }
+        }
+        
+        /* Visual Cue Animations */
+        @keyframes ctaGlow {
+            0%, 100% { 
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 0 0 rgba(255, 255, 255, 0.7);
+            }
+            50% { 
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 0 8px rgba(255, 255, 255, 0);
+            }
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -100% 0; }
+            100% { background-position: 200% 0; }
         }
         
         h1 {
@@ -221,11 +267,22 @@
             background: white;
             color: #667eea;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            position: relative;
+            animation: ctaGlow 2.5s ease-in-out infinite;
+        }
+        
+        .btn-primary::before {
+            content: '✨';
+            position: absolute;
+            left: -30px;
+            font-size: 1.2em;
+            animation: bounce 2s ease-in-out infinite;
         }
         
         .btn-primary:hover {
-            transform: translateY(-2px);
+            transform: translateY(-2px) scale(1.03);
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            animation: none;
         }
         
         .btn-secondary {
@@ -280,16 +337,42 @@
             border-radius: 20px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Attention-grabbing corner badge */
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+            opacity: 0;
+            clip-path: polygon(100% 0, 100% 100%, 0 0);
+            transition: opacity 0.3s ease;
+        }
+        
+        .feature-card:hover::before {
+            opacity: 0.15;
         }
         
         .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
         }
         
         .feature-icon {
             font-size: 3em;
             margin-bottom: 20px;
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-card:hover .feature-icon {
+            transform: scale(1.1) rotate(5deg);
         }
         
         .feature-card h3 {
@@ -319,6 +402,28 @@
         .step {
             text-align: center;
             position: relative;
+        }
+        
+        /* Arrow connector between steps */
+        .step:not(:last-child)::after {
+            content: '→';
+            position: absolute;
+            right: -12px;
+            top: 25px;
+            font-size: 2em;
+            color: #a78bfa;
+            opacity: 0.5;
+        }
+        
+        @media (max-width: 768px) {
+            .step:not(:last-child)::after {
+                content: '↓';
+                right: auto;
+                top: auto;
+                bottom: -32px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
         }
         
         .step-number {
@@ -414,10 +519,24 @@
             text-decoration: none;
             transition: transform 0.2s, box-shadow 0.2s;
             cursor: pointer;
+            position: relative;
+        }
+        
+        .hero-pill::after {
+            content: '✓';
+            position: absolute;
+            right: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            font-size: 1.1em;
         }
         
         .hero-pill:hover {
-            transform: translateY(-2px);
+            transform: translateY(-2px) scale(1.05);
+        }
+        
+        .hero-pill:hover::after {
+            opacity: 1;
         }
         
         .hero-pill-green {

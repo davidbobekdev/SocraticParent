@@ -218,6 +218,13 @@ class UserLogin(BaseModel):
     username: str
     password: str
 
+class GoogleAuthRequest(BaseModel):
+    credential: Optional[str] = None  # JWT token from Google One Tap
+    access_token: Optional[str] = None  # Access token from OAuth popup
+    email: Optional[str] = None
+    name: Optional[str] = None
+    sub: Optional[str] = None  # Google user ID
+
 class UserStatus(BaseModel):
     username: str
     email: str
@@ -374,6 +381,14 @@ app = FastAPI()
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# Public config endpoint (for frontend to get Google Client ID)
+@app.get("/api/config/public")
+async def get_public_config():
+    """Return public configuration for frontend"""
+    return {
+        "google_client_id": GOOGLE_CLIENT_ID
+    }
+
 # Authentication endpoints
 @app.post("/api/register", response_model=Token)
 async def register(user: UserCreate):
@@ -450,6 +465,144 @@ async def login(user: UserLogin):
     )
     
     return {"access_token": access_token, "token_type": "bearer"}
+
+# Google OAuth Configuration
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+
+async def verify_google_token(credential: str) -> dict:
+    """Verify Google JWT token and return user info"""
+    try:
+        # Google's token info endpoint for ID tokens
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"https://oauth2.googleapis.com/tokeninfo?id_token={credential}"
+            )
+            if response.status_code != 200:
+                raise ValueError("Invalid token")
+            
+            token_info = response.json()
+            
+            # Verify the token is for our app
+            if token_info.get("aud") != GOOGLE_CLIENT_ID:
+                raise ValueError("Token not for this application")
+            
+            return {
+                "email": token_info.get("email"),
+                "name": token_info.get("name", ""),
+                "sub": token_info.get("sub"),  # Google user ID
+                "email_verified": token_info.get("email_verified", "false") == "true"
+            }
+    except Exception as e:
+        print(f"Google token verification error: {e}")
+        raise ValueError(f"Token verification failed: {str(e)}")
+
+def get_or_create_google_user(email: str, name: str, google_id: str) -> tuple[str, bool]:
+    """Get existing user by Google ID/email or create new one. Returns (username, is_new_user)"""
+    users = load_users()
+    
+    # First, try to find user by Google ID
+    for username, user_data in users.items():
+        if user_data.get("google_id") == google_id:
+            return username, False
+    
+    # Next, try to find by email and link Google account
+    for username, user_data in users.items():
+        if user_data.get("email") == email:
+            # Link Google ID to existing account
+            user_data["google_id"] = google_id
+            user_data["auth_provider"] = user_data.get("auth_provider", "email") + ",google"
+            users[username] = user_data
+            save_users(users)
+            return username, False
+    
+    # Create new user with Google account
+    # Generate username from email (before @)
+    base_username = email.split("@")[0].lower().replace(".", "_").replace("+", "_")
+    username = base_username
+    counter = 1
+    while username in users:
+        username = f"{base_username}{counter}"
+        counter += 1
+    
+    users[username] = {
+        "username": username,
+        "email": email,
+        "hashed_password": None,  # No password for Google-only users
+        "created_at": datetime.utcnow().isoformat(),
+        "is_premium": False,
+        "daily_scans_left": 5,
+        "last_reset": datetime.now().isoformat(),
+        "paddle_subscription_id": None,
+        "google_id": google_id,
+        "auth_provider": "google",
+        "display_name": name
+    }
+    save_users(users)
+    
+    return username, True
+
+@app.post("/api/auth/google", response_model=Token)
+async def google_auth(auth_request: GoogleAuthRequest):
+    """Authenticate user via Google Sign-In"""
+    try:
+        # Handle JWT credential (from One Tap)
+        if auth_request.credential:
+            user_info = await verify_google_token(auth_request.credential)
+            email = user_info["email"]
+            name = user_info.get("name", "")
+            google_id = user_info["sub"]
+        
+        # Handle access token flow (from popup)
+        elif auth_request.access_token and auth_request.email and auth_request.sub:
+            # Verify the access token by calling Google's userinfo endpoint
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    "https://www.googleapis.com/oauth2/v3/userinfo",
+                    headers={"Authorization": f"Bearer {auth_request.access_token}"}
+                )
+                if response.status_code != 200:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Invalid Google access token"
+                    )
+                user_info = response.json()
+                email = user_info.get("email", auth_request.email)
+                name = user_info.get("name", auth_request.name or "")
+                google_id = user_info.get("sub", auth_request.sub)
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No valid Google credentials provided"
+            )
+        
+        if not email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email not provided by Google"
+            )
+        
+        # Get or create user
+        username, is_new = get_or_create_google_user(email, name, google_id)
+        
+        # Create access token
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": username}, expires_delta=access_token_expires
+        )
+        
+        return {"access_token": access_token, "token_type": "bearer"}
+        
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e)
+        )
+    except Exception as e:
+        print(f"Google auth error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Authentication failed"
+        )
 
 @app.get("/api/me")
 async def read_users_me(current_user: dict = Depends(get_current_user)):
