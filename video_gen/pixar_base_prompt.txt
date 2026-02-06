@@ -1,0 +1,33 @@
+STYLE: Pixar/Disney quality 3D animation, vibrant colors, smooth motion, cinematic lighting, family-friendly, action-packed superhero dynamics
+
+BRAND: Guided Homework - The app that helps parents become homework heroes
+
+CHARACTERS:
+- CHILD: 8-10 year old, expressive, initially stressed/overwhelmed, becomes happy/relieved
+- PARENT: Confident, heroic, wielding smartphone as magical tool
+- PHONE: Glowing smartphone with the Guided Homework app, emits magical powers
+
+THEME: Parent saves child from homework chaos using the magical phone app. The phone transforms confusion into clarity, chaos into order.
+
+ANIMATION STYLE: 
+- High-quality 3D rendering
+- Dynamic camera movements
+- Dramatic lighting effects
+- Magical particle effects from phone
+- Smooth transitions
+- Epic superhero moments
+
+DURATION: 8 seconds
+
+---
+
+{SCENE_CONTENT}
+
+---
+
+VISUAL REQUIREMENTS:
+- Phone should glow with blue/gold magical energy
+- Clear transformation from chaos to order
+- Emotional journey: stress → hope → joy
+- Parent and child connection moment at end
+- Cinematic quality, suitable for social media ads

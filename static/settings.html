@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings - Socratic Parent</title>
+    <title>Settings - Guided Homework</title>
+    <link rel="icon" type="image/png" href="/static/logo_website.png">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -250,8 +251,8 @@
                 } else {
                     document.getElementById('planType').textContent = 'Free';
                     document.getElementById('planType').className = 'stat-value free';
-                    const scansLeft = data.scans_left !== undefined ? data.scans_left : 3;
-                    document.getElementById('scansLeft').textContent = `${scansLeft} / 3`;
+                    const scansLeft = data.scans_left !== undefined ? data.scans_left : 5;
+                    document.getElementById('scansLeft').textContent = `${scansLeft} / 5`;
                     document.getElementById('upgradeBtn').classList.remove('hidden');
                 }
                 

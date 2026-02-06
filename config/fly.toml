@@ -4,7 +4,7 @@ services:
   - name: web
     image: 
       build:
-        dockerfile: Dockerfile
+        dockerfile: ./config/Dockerfile
     port: 8000
     health_check:
       http:

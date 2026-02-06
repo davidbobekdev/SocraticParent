@@ -1,0 +1,36 @@
+{
+  "timestamp": "2026-02-06T15:18:00.811235",
+  "project": "socratesparent",
+  "results": [
+    {
+      "scene": "scene_1",
+      "name": "Tornado of Chaos",
+      "file": "/home/davidbobek/SocraticParent/media/videos/scene_1_Tornado_of_Chaos_20260206_151019.mp4",
+      "status": "success"
+    },
+    {
+      "scene": "scene_2",
+      "name": "Math Arrow Attack",
+      "file": "/home/davidbobek/SocraticParent/media/videos/scene_2_Math_Arrow_Attack_20260206_151255.mp4",
+      "status": "success"
+    },
+    {
+      "scene": "scene_3",
+      "name": "Fog of Confusion",
+      "file": "/home/davidbobek/SocraticParent/media/videos/scene_3_Fog_of_Confusion_20260206_151402.mp4",
+      "status": "success"
+    },
+    {
+      "scene": "scene_4",
+      "name": "Magnetic Order",
+      "file": "/home/davidbobek/SocraticParent/media/videos/scene_4_Magnetic_Order_20260206_151511.mp4",
+      "status": "success"
+    },
+    {
+      "scene": "scene_5",
+      "name": "Monster Under the Desk",
+      "file": "/home/davidbobek/SocraticParent/media/videos/scene_5_Monster_Under_the_Desk_20260206_151637.mp4",
+      "status": "success"
+    }
+  ]
+}

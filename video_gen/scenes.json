@@ -1,0 +1,87 @@
+{
+  "scene_1": {
+    "title": "Tornado of Chaos",
+    "setting": "Kitchen table",
+    "description": "Violent tornado of chaotic scribbles and papers swirling around child",
+    "sequence": [
+      "(0-1s) Tornado intensifies, child spinning in center, papers flying everywhere",
+      "(1-2s) Parent slides across floor (action movie style), phone extended forward",
+      "(2-3s) Phone screen opens wide, VACUUM BEAM shoots out",
+      "(3-4s) Vacuum sucks scribbles toward phone, tornado fights back",
+      "(4-5s) Parent braces against pull, scribbles streaming into phone screen",
+      "(5-6s) Last scribbles WHOOSH into phone, tornado collapses",
+      "(6-7s) Clean organized homework appears on table from phone projection",
+      "(7-8s) Child catches breath, parent spins phone and pockets it"
+    ],
+    "phone_action": "Industrial vacuum that sucks chaos into order",
+    "core_message": "Tornado chaos → Phone vacuums it → Clean solution"
+  },
+  "scene_2": {
+    "title": "Math Arrow Attack",
+    "setting": "Living room",
+    "description": "Math problems shooting at child like arrows from all directions",
+    "sequence": [
+      "(0-1s) Child dodging arrows (equations), getting hit, overwhelmed",
+      "(1-2s) Parent LEAPS in front of child, phone held up as shield",
+      "(2-3s) Phone screen expands into GLOWING SHIELD, arrows bounce off",
+      "(3-4s) Arrows deflect into organized pattern, shield pulses with each block",
+      "(4-5s) Parent PUSHES shield forward, sends arrows flying backward",
+      "(5-6s) Arrows reorganize mid-air into solved equations",
+      "(6-7s) Solutions land gently on homework page as checkmarks",
+      "(7-8s) Shield dissolves, both in superhero landing pose"
+    ],
+    "phone_action": "Energy shield that defends and reorganizes",
+    "core_message": "Under attack → Phone shields → Problems solved"
+  },
+  "scene_3": {
+    "title": "Fog of Confusion",
+    "setting": "Bedroom",
+    "description": "Thick fog of confusion fills room, child lost in darkness",
+    "sequence": [
+      "(0-1s) Child wandering blind, hands out, bumping into things, fog everywhere",
+      "(1-2s) Parent kicks door open (dramatic), phone raised high",
+      "(2-3s) Phone screen EXPLODES with spotlight beam cutting through fog",
+      "(3-4s) Beam sweeps room like lighthouse, fog retreats from light",
+      "(4-5s) Parent spins 360°, phone light burns away all fog",
+      "(5-6s) Room now clear, revealed homework path glowing on floor",
+      "(6-7s) Child follows light path, confidently walks to answer",
+      "(7-8s) Phone dims, mission accomplished, fist bump"
+    ],
+    "phone_action": "Powerful searchlight that burns away confusion",
+    "core_message": "Lost in fog → Phone illuminates → Clear path forward"
+  },
+  "scene_4": {
+    "title": "Magnetic Order",
+    "setting": "Playroom",
+    "description": "Homework scattered everywhere, toys flying, total disaster zone",
+    "sequence": [
+      "(0-1s) Child drowning in mess, papers flying past head, chaos spinning",
+      "(1-2s) Parent enters calmly, holds phone horizontal, eyes focused",
+      "(2-3s) Phone screen pulses, MAGNETIC FORCE ripples out visibly",
+      "(3-4s) All papers and problems SNAP toward phone, flying through air",
+      "(4-5s) Items orbit phone rapidly like planetary system",
+      "(5-6s) Phone SLAMS onto table, items organize in perfect grid",
+      "(6-7s) Child's eyes wide, everything suddenly perfectly arranged",
+      "(7-8s) Parent lifts phone, organized layout remains, thumbs up"
+    ],
+    "phone_action": "Electromagnetic force that attracts and organizes chaos",
+    "core_message": "Scattered mess → Phone magnetizes → Perfect order"
+  },
+  "scene_5": {
+    "title": "Monster Under the Desk",
+    "setting": "Study room",
+    "description": "Giant homework monster made of crumpled papers terrorizing child",
+    "sequence": [
+      "(0-1s) Paper monster growling, child backed into corner, terrified",
+      "(1-2s) Parent bursts through window (superhero entrance), phone glowing",
+      "(2-3s) Phone shoots LASER BEAM at monster, monster roars",
+      "(3-4s) Laser slices monster into pieces, papers scatter",
+      "(4-5s) Phone emits GOLDEN WAVE, paper pieces transform",
+      "(5-6s) Monster pieces become completed homework pages, floating down",
+      "(6-7s) Pages land perfectly stacked on desk, gold stars appearing",
+      "(7-8s) Child hugs parent, both look at phone triumphantly"
+    ],
+    "phone_action": "Laser destroyer that transforms chaos into achievement",
+    "core_message": "Scary monster → Phone defeats it → Victory achieved"
+  }
+}

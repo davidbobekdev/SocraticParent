@@ -53,3 +53,7 @@ test_*.sh
 
 # Logs
 *.log
+
+# Generated media files (videos, large files)
+media/videos/*.mp4
+video_gen/*.mp4

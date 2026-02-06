@@ -16,6 +16,7 @@ env/
 # Ignore Git
 .git
 .gitignore
+.github
 
 # Ignore IDE settings
 .vscode/
@@ -29,3 +30,21 @@ docker-compose.yml
 # Ignore logs and temp files
 *.log
 tmp/
+
+# Ignore documentation and tests (not needed in production)
+docs/
+tests/
+*.md
+README.md
+LICENSE
+
+# Ignore deployment scripts
+start.sh
+fly.toml
+render.yaml
+
+# Ignore user data
+users.json
+# Ignore generated media (videos, images)
+media/
+video_gen/

@@ -7,7 +7,7 @@ on:
     paths:
       - 'main.py'
       - 'requirements.txt'
-      - 'Dockerfile'
+      - 'config/Dockerfile'
       - 'render.yaml'
       - '.github/workflows/deploy.yml'
 

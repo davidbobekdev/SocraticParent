@@ -933,6 +933,14 @@ body::before {
     border-radius: 4px;
 }
 
+/* Remove double box: no background on equations inside display blocks */
+.katex-display .katex,
+.question-text .katex-display .katex {
+    background: none !important;
+    padding: 0 !important;
+    border: none !important;
+}
+
 /* Tip Card */
 .tip-card {
     background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);

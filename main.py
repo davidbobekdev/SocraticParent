@@ -197,15 +197,15 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
 
 # Simple file-based user storage with persistent path
-# Railway volumes mount at /data, fallback to local for development
-DATA_DIR = os.getenv("DATA_DIR", ".")
+# Railway volumes mount at /data, local development uses ./data
+DATA_DIR = os.getenv("DATA_DIR", "./data")
 # Create data directory if it doesn't exist
 if not os.path.exists(DATA_DIR):
     try:
         os.makedirs(DATA_DIR, exist_ok=True)
     except Exception as e:
-        print(f"Warning: Could not create DATA_DIR {DATA_DIR}, falling back to current directory: {e}")
-        DATA_DIR = "."
+        print(f"Warning: Could not create DATA_DIR {DATA_DIR}, falling back to ./data: {e}")
+        DATA_DIR = "./data"
 USERS_FILE = os.path.join(DATA_DIR, "users.json")
 
 # Pydantic models
@@ -912,12 +912,12 @@ async def log_analytics_event(
         
         # In production, you'd send this to analytics service (Google Analytics, Mixpanel, etc.)
         # For now, just log to console
-        logger.info(f"📊 Analytics: {username} - {event_name} - {data.get('properties', {})}")
+        print(f"📊 Analytics: {username} - {event_name} - {data.get('properties', {})}")
         
         return {"status": "logged"}
     except Exception as e:
         # Never fail the request
-        logger.debug(f"Analytics logging failed: {e}")
+        print(f"Analytics logging failed: {e}")
         return {"status": "ignored"}
 
 # Contact Form Endpoint
@@ -1073,7 +1073,8 @@ HTML_CONTENT = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Learn Step-by-Step</title>
+    <title>Guided Homework</title>
+    <link rel="icon" type="image/png" href="/static/logo_website.png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
@@ -1312,8 +1313,6 @@ HTML_CONTENT = """
         }
         .katex-display {
             margin: 24px 0;
-            overflow-x: auto;
-            overflow-y: hidden;
             background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
             padding: 20px 24px;
             border-radius: 12px;
@@ -1331,7 +1330,6 @@ HTML_CONTENT = """
         }
         .katex-display > .katex {
             font-size: 1.15em;
-            white-space: nowrap;
             color: #1e40af;
         }
         /* Fancy superscripts/exponents */
@@ -1352,6 +1350,12 @@ HTML_CONTENT = """
             padding: 2px 6px;
             border-radius: 4px;
             border-bottom: 2px solid #93c5fd;
+        }
+        /* Remove double box: no background on equations inside display blocks */
+        .katex-display .katex {
+            background: none !important;
+            padding: 0 !important;
+            border: none !important;
         }
         /* Fractions */
         .katex .frac-line {
